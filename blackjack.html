@@ -159,11 +159,11 @@
       return score;
     }
 
-    async function showCard(card, container) {
+    async function showCard(card, container, hidden = false) {
       return new Promise(resolve => {
         const el = document.createElement('div');
         el.className = 'card';
-        el.textContent = card;
+        el.textContent = hidden ? '🂠' : card;
         container.appendChild(el);
         setTimeout(resolve, 600);
       });
@@ -195,7 +195,7 @@
       playerScoreEl.innerText = '';
       dealerScoreEl.innerText = '';
 
-      // Deal initial cards with animation
+      // Deal initial cards
       playerCards.push(deck.pop());
       dealerCards.push(deck.pop());
       playerCards.push(deck.pop());
@@ -204,11 +204,12 @@
       await showCard(playerCards[0], playerHand);
       await showCard(dealerCards[0], dealerHand);
       await showCard(playerCards[1], playerHand);
-      await showCard(dealerCards[1], dealerHand);
+      await showCard('🂠', dealerHand, true); // Hidden card
 
-      updateScores();
+      updateScores(true); // Hide dealer score
 
       if (calculateScore(playerCards) === 21) {
+        revealDealerHand();
         endGame('🃏 Natural Blackjack! You win 1.5x!');
         money += Math.floor(bet * 2.5);
         updateMoney();
@@ -220,15 +221,34 @@
       surrenderBtn.disabled = false;
     }
 
+    function updateScores(hideDealer = false) {
+      playerScoreEl.innerText = `Score: ${calculateScore(playerCards)}`;
+      dealerScoreEl.innerText = hideDealer
+        ? `Score: ${getCardValue(dealerCards[0])}`
+        : `Score: ${calculateScore(dealerCards)}`;
+    }
+
+    function revealDealerHand() {
+      dealerHand.innerHTML = '';
+      for (let card of dealerCards) {
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.textContent = card;
+        dealerHand.appendChild(el);
+      }
+      updateScores(false);
+    }
+
     async function playerHit() {
       if (!inGame) return;
       const card = deck.pop();
       playerCards.push(card);
       hitBtn.disabled = true;
       await showCard(card, playerHand);
-      updateScores();
+      updateScores(true);
       const score = calculateScore(playerCards);
       if (score > 21) {
+        revealDealerHand();
         endGame("💥 You busted! Dealer wins.");
       } else {
         hitBtn.disabled = false;
@@ -240,11 +260,13 @@
       standBtn.disabled = true;
       surrenderBtn.disabled = true;
 
+      revealDealerHand();
+
       while (calculateScore(dealerCards) < 17) {
         const card = deck.pop();
         dealerCards.push(card);
         await showCard(card, dealerHand);
-        updateScores();
+        updateScores(false);
       }
 
       const playerScore = calculateScore(playerCards);
@@ -275,11 +297,6 @@
       inGame = false;
       resultEl.innerText = msg;
       startBtn.disabled = false;
-    }
-
-    function updateScores() {
-      playerScoreEl.innerText = `Score: ${calculateScore(playerCards)}`;
-      dealerScoreEl.innerText = `Score: ${calculateScore(dealerCards)}`;
     }
 
     updateMoney();
