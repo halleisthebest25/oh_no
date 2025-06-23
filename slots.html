@@ -28,11 +28,15 @@
       border-radius: 10px;
       cursor: pointer;
     }
+    button:disabled {
+      background-color: #999 !important;
+      cursor: wait !important;
+    }
     button {
       background-color: #e67e22;
       color: white;
     }
-    button:hover {
+    button:hover:enabled {
       background-color: #d35400;
     }
     .slot {
@@ -42,17 +46,12 @@
       padding: 10px;
       margin: 5px;
       border-radius: 5px;
-      font-size: 2rem;
-      width: 60px;
-      height: 60px;
-      line-height: 60px;
-    }
-    .spinning {
-      animation: spin 0.5s linear infinite;
-    }
-    @keyframes spin {
-      0% { transform: rotateX(0); }
-      100% { transform: rotateX(360deg); }
+      font-size: 1.5rem;
+      width: 100px;
+      height: 50px;
+      line-height: 50px;
+      font-weight: bold;
+      user-select: none;
     }
     #result {
       margin-top: 20px;
@@ -79,21 +78,38 @@
     <label for="betAmount">Enter Your Bet:</label>
     <input type="number" id="betAmount" min="1" value="100" />
     <br/>
-    <button onclick="pullLever()">🎯 Pull Lever</button>
+    <button id="spinBtn" onclick="pullLever()">🎯 Pull Lever</button>
     <div id="slotsArea">
-      <div class="slot" id="slot1">❓</div>
-      <div class="slot" id="slot2">❓</div>
-      <div class="slot" id="slot3">❓</div>
+      <div class="slot" id="slot1">?</div>
+      <div class="slot" id="slot2">?</div>
+      <div class="slot" id="slot3">?</div>
     </div>
     <div id="result"></div>
     <a href="index.html">⬅ Back to Home</a>
   </div>
 
   <script>
-    const symbols = ['🍒','🍋','🔔','⭐','7','🍉','💎','🍇','💰','🥭'];
-    let money = localStorage.getItem('money') ? parseInt(localStorage.getItem('money')) : 1000;
+    const spinBtn = document.getElementById('spinBtn');
     const moneyEl = document.getElementById('money');
     const resultEl = document.getElementById('result');
+    const slot1 = document.getElementById('slot1');
+    const slot2 = document.getElementById('slot2');
+    const slot3 = document.getElementById('slot3');
+
+    // Symbols with probabilities
+    // Order matters here; sum must be 100%
+    const symbols = [
+      {name:'duck', chance:39},
+      {name:'chocolate', chance:25},
+      {name:'bat', chance:14},
+      {name:'pistol', chance:9},
+      {name:'smg', chance:5},
+      {name:'car', chance:3},
+      {name:'atomic', chance:1.95},
+      {name:'7', chance:1.16}
+    ];
+
+    let money = localStorage.getItem('money') ? parseInt(localStorage.getItem('money')) : 1000;
 
     function updateMoney() {
       moneyEl.innerText = `Current Money: $${money}`;
@@ -113,49 +129,125 @@
       return bet;
     }
 
+    // Pick one symbol based on weighted chance
+    function pickSymbol() {
+      let r = Math.random() * 100;
+      let cumulative = 0;
+      for (let s of symbols) {
+        cumulative += s.chance;
+        if (r < cumulative) return s.name;
+      }
+      // fallback (should not happen)
+      return symbols[0].name;
+    }
+
+    // Check all win combos and return multiplier and name or 0 if none
+    function checkWinCombo(slots) {
+      const [a,b,c] = slots;
+
+      // Helper functions
+      function countSymbol(sym) {
+        return slots.filter(s => s === sym).length;
+      }
+
+      // 1. Pinata: all duck, chocolate, and bat in any order (2x)
+      const pinataSet = ['duck','chocolate','bat'];
+      if (pinataSet.every(s => slots.includes(s)) && slots.length === 3) return {mult:2, name:'Pinata'};
+
+      // 2. Flock O Ducks: 3 ducks (3x)
+      if (countSymbol('duck') === 3) return {mult:3, name:'Flock O Ducks'};
+
+      // 3. Duck Hunting: 2 ducks + 1 pistol (3x)
+      if (countSymbol('duck') === 2 && countSymbol('pistol') === 1) return {mult:3, name:'Duck Hunting'};
+
+      // 4. Serious Duck Hunting: 1 smg + 2 ducks (4x)
+      if (countSymbol('smg') === 1 && countSymbol('duck') === 2) return {mult:4, name:'Serious Duck Hunting'};
+
+      // 5. Sweet Tooth: 3 chocolate (4x)
+      if (countSymbol('chocolate') === 3) return {mult:4, name:'Sweet Tooth'};
+
+      // 6. Road Kill: 2 ducks + 1 car (6x)
+      if (countSymbol('duck') === 2 && countSymbol('car') === 1) return {mult:6, name:'Road Kill'};
+
+      // 7. Meltdown 1: 2 chocolate + 1 atomic (7x)
+      if (countSymbol('chocolate') === 2 && countSymbol('atomic') === 1) return {mult:7, name:'Meltdown 1'};
+
+      // 8. Meltdown 2: 2 atomic + 1 chocolate (7x)
+      if (countSymbol('atomic') === 2 && countSymbol('chocolate') === 1) return {mult:7, name:'Meltdown 2'};
+
+      // 9. Vandalism: 2 car + 1 bat (8x)
+      if (countSymbol('car') === 2 && countSymbol('bat') === 1) return {mult:8, name:'Vandalism'};
+
+      // 10. Vandalism 2: 1 car + 2 bat (8x)
+      if (countSymbol('car') === 1 && countSymbol('bat') === 2) return {mult:8, name:'Vandalism 2'};
+
+      // 11. Homerun: 3 bats (8x)
+      if (countSymbol('bat') === 3) return {mult:8, name:'Homerun'};
+
+      // 12. Gunfight: 2 smg + 1 pistol (10x)
+      if (countSymbol('smg') === 2 && countSymbol('pistol') === 1) return {mult:10, name:'Gunfight'};
+
+      // 13. Gunfight 2: 1 smg + 2 pistol (10x)
+      if (countSymbol('smg') === 1 && countSymbol('pistol') === 2) return {mult:10, name:'Gunfight 2'};
+
+      // 14. Driveby: 1 car + 2 pistol or 2 smg (20x)
+      if (countSymbol('car') === 1 && (countSymbol('pistol') === 2 || countSymbol('smg') === 2)) return {mult:20, name:'Driveby'};
+
+      // 15. Firing Range: 3 pistol (40x)
+      if (countSymbol('pistol') === 3) return {mult:40, name:'Firing Range'};
+
+      // 16. Overkill: 3 smg (200x)
+      if (countSymbol('smg') === 3) return {mult:200, name:'Overkill'};
+
+      // 17. Pileup: 3 cars (1000x)
+      if (countSymbol('car') === 3) return {mult:1000, name:'Pileup'};
+
+      // 18. Radioactive: 3 atomic (2000x)
+      if (countSymbol('atomic') === 3) return {mult:2000, name:'Radioactive'};
+
+      // 19. Jackpot: 3 7 (10000x)
+      if (countSymbol('7') === 3) return {mult:10000, name:'JACKPOT'};
+
+      return {mult:0, name:''};
+    }
+
+    let spinning = false;
+
     function pullLever() {
+      if (spinning) return; // cooldown
       const bet = getBet();
       if (!bet) return;
+
+      spinning = true;
+      spinBtn.disabled = true;
+      resultEl.innerText = 'Spinning...';
       money -= bet;
       updateMoney();
 
-      const s1 = document.getElementById('slot1');
-      const s2 = document.getElementById('slot2');
-      const s3 = document.getElementById('slot3');
+      slot1.textContent = '?';
+      slot2.textContent = '?';
+      slot3.textContent = '?';
 
-      s1.classList.add('spinning');
-      s2.classList.add('spinning');
-      s3.classList.add('spinning');
-      resultEl.innerText = 'Spinning...';
-
+      // Simulate spinning animation with timeout, 1 second
       setTimeout(() => {
-        s1.classList.remove('spinning');
-        s2.classList.remove('spinning');
-        s3.classList.remove('spinning');
+        const slots = [pickSymbol(), pickSymbol(), pickSymbol()];
+        slot1.textContent = slots[0];
+        slot2.textContent = slots[1];
+        slot3.textContent = slots[2];
 
-        const a = symbols[Math.floor(Math.random()*symbols.length)];
-        const b = symbols[Math.floor(Math.random()*symbols.length)];
-        const c = symbols[Math.floor(Math.random()*symbols.length)];
-        s1.textContent = a;
-        s2.textContent = b;
-        s3.textContent = c;
+        const win = checkWinCombo(slots);
 
-        let payout = 0;
-        if (a === b && b === c) {
-          payout = bet * 10;
-        } else if (a === b || b === c || a === c) {
-          payout = bet * 3;
-        } else if ([a,b,c].includes('7') || [a,b,c].includes('💰') || [a,b,c].includes('💎')) {
-          payout = bet * 2;
-        }
-
-        if (payout > 0) {
-          resultEl.innerText = `🎉 SLOT WIN! You win $${payout}`;
-          money += payout;
+        if (win.mult > 0) {
+          const winAmount = bet * win.mult;
+          money += winAmount;
+          resultEl.innerText = `🎉 You hit "${win.name}" and win $${winAmount}!`;
         } else {
-          resultEl.innerText = `💀 SLOT LOSS! You lost $${bet}`;
+          resultEl.innerText = `💀 You lost $${bet}.`;
         }
+
         updateMoney();
+        spinning = false;
+        spinBtn.disabled = false;
       }, 1000);
     }
 
