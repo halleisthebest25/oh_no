@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gamble to Win! - Blackjack</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 { font-size: 3rem; margin-bottom: 5px; }
+    .game {
+      margin: 20px auto;
+      padding: 20px;
+      background: rgba(0,0,0,0.6);
+      border-radius: 15px;
+      max-width: 600px;
+    }
+    button, input[type="number"] {
+      padding: 10px 20px;
+      margin: 10px 5px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    button {
+      background-color: #e67e22;
+      color: white;
+    }
+    button:hover {
+      background-color: #d35400;
+    }
+    .card {
+      display: inline-block;
+      background: white;
+      color: black;
+      padding: 10px;
+      margin: 5px;
+      border-radius: 5px;
+      font-size: 2rem;
+      width: 60px;
+      height: 60px;
+      line-height: 60px;
+    }
+    #blackjackArea {
+      margin-top: 10px;
+      font-size: 1.3rem;
+      min-height: 3em;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 1.3rem;
+      white-space: pre-wrap;
+      min-height: 2em;
+    }
+    #bjControls button {
+      margin: 0 5px;
+    }
+    a {
+      display: inline-block;
+      margin-top: 10px;
+      color: #e67e22;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    a:hover {
+      color: #d35400;
+    }
+  </style>
+</head>
+<body>
+  <h1>🃏 Gamble to Win! - Blackjack</h1>
+  <div class="game">
+    <p id="money">Current Money: $0</p>
+    <label for="betAmount">Enter Your Bet:</label>
+    <input type="number" id="betAmount" min="1" value="100" />
+    <br/>
+    <button onclick="startBlackjack()">Start Blackjack</button>
+    <div id="blackjackArea"></div>
+    <div id="bjControls" style="display:none;">
+      <button onclick="hit()">Hit</button>
+      <button onclick="stand()">Stand</button>
+      <button onclick="surrender()">Surrender</button>
+    </div>
+    <div id="result"></div>
+    <a href="index.html">⬅ Back to Home</a>
+  </div>
+
+  <script>
+    let money = localStorage.getItem('money') ? parseInt(localStorage.getItem('money')) : 1000;
+    const moneyEl = document.getElementById('money');
+    const resultEl = document.getElementById('result');
+    let playerCards = [], dealerCards = [], currentBet = 0;
+
+    function updateMoney() {
+      moneyEl.innerText = `Current Money: $${money}`;
+      localStorage.setItem('money', money);
+    }
+
+    function getCardValue(card) {
+      let rank = card.slice(0, -1);
+      if (['J','Q','K'].includes(rank)) return 10;
+      if (rank === 'A') return 11;
+      return parseInt(rank);
+    }
+
+    function drawCard() {
+      const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+      const suits = ['♠','♥','♦','♣'];
+      return ranks[Math.floor(Math.random()*13)] + suits[Math.floor(Math.random()*4)];
+    }
+
+    function calcScore(cards) {
+      let total = 0, aces = 0;
+      for (let c of cards) {
+        let val = getCardValue(c);
+        total += val;
+        if (c.startsWith('A')) aces++;
+      }
+      while (total > 21 && aces) {
+        total -= 10;
+        aces--;
+      }
+      return total;
+    }
+
+    function renderCards() {
+      const area = document.getElementById('blackjackArea');
+      area.innerHTML = `<p>Your Cards: ${playerCards.map(c=>`<span class="card">${c}</span>`).join('')} (Score: ${calcScore(playerCards)})</p>
+                        <p>Dealer: ${dealerCards.map(c=>`<span class="card">${c}</span>`).join('')}</p>`;
+    }
+
+    function getBet() {
+      const bet = parseInt(document.getElementById('betAmount').value);
+      if (isNaN(bet) || bet <= 0) {
+        resultEl.innerText = '❗ Enter a valid bet amount.';
+        return null;
+      }
+      if (bet > money) {
+        resultEl.innerText = '❌ Not enough money!';
+        return null;
+      }
+      return bet;
+    }
+
+    function startBlackjack() {
+      const bet = getBet();
+      if (!bet) return;
+      currentBet = bet;
+      money -= bet;
+      updateMoney();
+
+      playerCards = [drawCard(), drawCard()];
+      dealerCards = [drawCard()];
+      renderCards();
+      document.getElementById('bjControls').style.display = 'block';
+
+      if (calcScore(playerCards) === 21) {
+        resultEl.innerText = "🂡 Natural Blackjack! You win 1.5x!";
+        money += bet * 2.5;
+        updateMoney();
+        document.getElementById('bjControls').style.display = 'none';
+      } else {
+        resultEl.innerText = "🃏 Your turn. Hit, Stand, or Surrender.";
+      }
+    }
+
+    function hit() {
+      playerCards.push(drawCard());
+      renderCards();
+      const score = calcScore(playerCards);
+      if (score > 21) {
+        resultEl.innerText = "💥 You busted! Dealer wins.";
+        document.getElementById('bjControls').style.display = 'none';
+        updateMoney();
+      }
+    }
+
+    function stand() {
+      while (calcScore(dealerCards) < 17) {
+        dealerCards.push(drawCard());
+      }
+      const playerScore = calcScore(playerCards);
+      const dealerScore = calcScore(dealerCards);
+      renderCards();
+      let msg = '';
+      if (dealerScore > 21 || playerScore > dealerScore) {
+        msg = `✅ You win $${currentBet}`;
+        money += currentBet * 2;
+      } else if (dealerScore === playerScore) {
+        msg = "➖ Push. You get your bet back.";
+        money += currentBet;
+      } else {
+        msg = "❌ Dealer wins. You lose.";
+      }
+      resultEl.innerText = msg;
+      document.getElementById('bjControls').style.display = 'none';
+      updateMoney();
+    }
+
+    function surrender() {
+      resultEl.innerText = `🏳️ You surrendered. Half of $${currentBet} returned.`;
+      money += Math.floor(currentBet / 2);
+      document.getElementById('bjControls').style.display = 'none';
+      updateMoney();
+    }
+
+    updateMoney();
+  </script>
+</body>
+</html>
