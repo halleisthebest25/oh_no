@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gamble to Win! - Crypto Trading</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #1a2a6c, #b21f1f, #fdbb2d);
+      color: #222;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: white;
+      text-shadow: 1px 1px 4px #000;
+    }
+    #balance {
+      font-size: 1.4rem;
+      margin-bottom: 15px;
+      color: white;
+      text-shadow: 1px 1px 3px #000;
+    }
+    .coin {
+      background: rgba(255 255 255 / 0.85);
+      margin: 20px auto;
+      max-width: 600px;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px #fff8;
+    }
+    .coin h2 {
+      margin-bottom: 10px;
+    }
+    .price {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input[type="number"] {
+      width: 80px;
+      padding: 5px;
+      font-size: 1rem;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 20px;
+      font-size: 1rem;
+      background-color: #2c3e50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #34495e;
+    }
+    .holdings {
+      margin-top: 8px;
+      font-weight: bold;
+      color: #555;
+    }
+    #messages {
+      margin-top: 15px;
+      font-weight: bold;
+      min-height: 1.4em;
+      color: yellow;
+      text-shadow: 1px 1px 3px #000;
+    }
+    a {
+      display: inline-block;
+      margin-top: 20px;
+      color: white;
+      font-weight: bold;
+      text-decoration: none;
+      text-shadow: 1px 1px 4px #000;
+    }
+    a:hover {
+      color: #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h1>💰 Gamble to Win! - Crypto Trading</h1>
+  <div id="balance">Balance: $0</div>
+
+  <div class="coin" id="bitcoinCoin">
+    <h2>Bitcoin (BTC)</h2>
+    <div class="price" id="btcPrice">$0</div>
+    <label>Amount to Buy/Sell:</label>
+    <input type="number" id="btcAmount" min="0" step="0.0001" value="0" />
+    <br />
+    <button onclick="buyCoin('btc')">Buy BTC</button>
+    <button onclick="sellCoin('btc')">Sell BTC</button>
+    <div class="holdings" id="btcHoldings">Holdings: 0 BTC</div>
+  </div>
+
+  <div class="coin" id="dogeCoin">
+    <h2>Dogecoin (DOGE)</h2>
+    <div class="price" id="dogePrice">$0</div>
+    <label>Amount to Buy/Sell:</label>
+    <input type="number" id="dogeAmount" min="0" step="0.0001" value="0" />
+    <br />
+    <button onclick="buyCoin('doge')">Buy DOGE</button>
+    <button onclick="sellCoin('doge')">Sell DOGE</button>
+    <div class="holdings" id="dogeHoldings">Holdings: 0 DOGE</div>
+  </div>
+
+  <div class="coin" id="rugCoin">
+    <h2>$RUG Coin (Fake)</h2>
+    <div class="price" id="rugPrice">$0</div>
+    <label>Amount to Buy/Sell:</label>
+    <input type="number" id="rugAmount" min="0" step="0.0001" value="0" />
+    <br />
+    <button onclick="buyCoin('rug')">Buy $RUG</button>
+    <button onclick="sellCoin('rug')">Sell $RUG</button>
+    <div class="holdings" id="rugHoldings">Holdings: 0 $RUG</div>
+  </div>
+
+  <div id="messages"></div>
+  <a href="index.html">⬅ Back to Home</a>
+
+  <script>
+    let money = localStorage.getItem('money') ? parseFloat(localStorage.getItem('money')) : 1000;
+    let holdings = {
+      btc: localStorage.getItem('btcHoldings') ? parseFloat(localStorage.getItem('btcHoldings')) : 0,
+      doge: localStorage.getItem('dogeHoldings') ? parseFloat(localStorage.getItem('dogeHoldings')) : 0,
+      rug: localStorage.getItem('rugHoldings') ? parseFloat(localStorage.getItem('rugHoldings')) : 0,
+    };
+
+    let prices = {
+      btc: 0,
+      doge: 0,
+      rug: 1
+    };
+
+    const btcPriceEl = document.getElementById('btcPrice');
+    const dogePriceEl = document.getElementById('dogePrice');
+    const rugPriceEl = document.getElementById('rugPrice');
+    const balanceEl = document.getElementById('balance');
+    const messagesEl = document.getElementById('messages');
+
+    // Update balance and holdings display
+    function updateDisplay() {
+      balanceEl.textContent = `Balance: $${money.toFixed(2)}`;
+      document.getElementById('btcHoldings').textContent = `Holdings: ${holdings.btc.toFixed(6)} BTC`;
+      document.getElementById('dogeHoldings').textContent = `Holdings: ${holdings.doge.toFixed(6)} DOGE`;
+      document.getElementById('rugHoldings').textContent = `Holdings: ${holdings.rug.toFixed(6)} $RUG`;
+    }
+
+    // Fetch live BTC price every 10 seconds
+    async function fetchBTCPrice() {
+      try {
+        const res = await fetch('https://api.coindesk.com/v1/bpi/currentprice/USD.json');
+        const data = await res.json();
+        prices.btc = parseFloat(data.bpi.USD.rate.replace(/,/g, ''));
+        btcPriceEl.textContent = `$${prices.btc.toFixed(2)}`;
+      } catch (e) {
+        btcPriceEl.textContent = 'Error';
+      }
+    }
+
+    // Fetch live DOGE price every 10 seconds using CoinGecko API
+    async function fetchDOGEPrice() {
+      try {
+        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=dogecoin&vs_currencies=usd');
+        const data = await res.json();
+        prices.doge = data.dogecoin.usd;
+        dogePriceEl.textContent = `$${prices.doge.toFixed(4)}`;
+      } catch (e) {
+        dogePriceEl.textContent = 'Error';
+      }
+    }
+
+    // RUG coin logic
+    let rugOriginalPrice = 1;
+    let rugPrice = 1;
+    let rugRugPullTimeouts = [];
+    let rugRiskInterval = null;
+
+    function startRugPump() {
+      // Cancel old timeouts and intervals
+      rugRugPullTimeouts.forEach(t => clearTimeout(t));
+      rugRugPullTimeouts = [];
+      if (rugRiskInterval) clearInterval(rugRiskInterval);
+
+      rugPrice = rugOriginalPrice;
+      rugPriceEl.textContent = `$${rugPrice.toFixed(4)}`;
+      let pumpDuration = 30000; // 30 sec
+      let startTime = Date.now();
+
+      function pumpStep() {
+        const elapsed = Date.now() - startTime;
+        if (elapsed < pumpDuration) {
+          rugPrice += (Math.random() * 0.5 + 0.1);
+          rugPriceEl.textContent = `$${rugPrice.toFixed(4)}`;
+          setTimeout(pumpStep, 500);
+        } else {
+          // Rugpull: drop to 1% of original price
+          rugPrice = rugOriginalPrice * 0.01;
+          rugPriceEl.textContent = `$${rugPrice.toFixed(4)}`;
+
+          // After rugpull, start risky price fluctuations
+          rugRiskInterval = setInterval(() => {
+            rugPrice = rugOriginalPrice * (0.01 + Math.random() * 0.1);
+            rugPriceEl.textContent = `$${rugPrice.toFixed(4)}`;
+          }, 3000);
+        }
+      }
+      pumpStep();
+    }
+
+    // Save holdings and money
+    function saveAll() {
+      localStorage.setItem('money', money.toFixed(2));
+      localStorage.setItem('btcHoldings', holdings.btc);
+      localStorage.setItem('dogeHoldings', holdings.doge);
+      localStorage.setItem('rugHoldings', holdings.rug);
+    }
+
+    // Buy coin
+    function buyCoin(coin) {
+      const amountInput = document.getElementById(coin + 'Amount');
+      let amount = parseFloat(amountInput.value);
+      if (isNaN(amount) || amount <= 0) {
+        messagesEl.textContent = 'Enter a valid positive amount.';
+        return;
+      }
+
+      let price = prices[coin];
+      if (coin === 'rug') price = rugPrice;
+
+      let cost = amount * price;
+      if (cost > money) {
+        messagesEl.textContent = 'Not enough money!';
+        return;
+      }
+
+      money -= cost;
+      holdings[coin] += amount;
+      messagesEl.textContent = `Bought ${amount.toFixed(4)} ${coin.toUpperCase()} for $${cost.toFixed(2)}.`;
+
+      if (coin === 'rug') {
+        startRugPump();
+      }
+
+      updateDisplay();
+      saveAll();
+    }
+
+    // Sell coin
+    function sellCoin(coin) {
+      const amountInput = document.getElementById(coin + 'Amount');
+      let amount = parseFloat(amountInput.value);
+      if (isNaN(amount) || amount <= 0) {
+        messagesEl.textContent = 'Enter a valid positive amount.';
+        return;
+      }
+
+      if (amount > holdings[coin]) {
+        messagesEl.textContent = `You don't have that much ${coin.toUpperCase()}.`;
+        return;
+      }
+
+      let price = prices[coin];
+      if (coin === 'rug') price = rugPrice;
+
+      let revenue = amount * price;
+      money += revenue;
+      holdings[coin] -= amount;
+      messagesEl.textContent = `Sold ${amount.toFixed(4)} ${coin.toUpperCase()} for $${revenue.toFixed(2)}.`;
+
+      updateDisplay();
+      saveAll();
+    }
+
+    // Initial update and intervals
+    updateDisplay();
+    fetchBTCPrice();
+    fetchDOGEPrice();
+    setInterval(fetchBTCPrice, 10000);
+    setInterval(fetchDOGEPrice, 10000);
+
+  </script>
+</body>
+</html>
