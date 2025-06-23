@@ -120,7 +120,7 @@
 
   <div class="coin" id="rugCoin">
     <h2>$RUG Coin (Fake)</h2>
-    <div class="price" id="rugPrice">$0</div>
+    <div class="price" id="rugPrice">$1.0000</div>
     <label>Amount to Buy/Sell:</label>
     <input type="number" id="rugAmount" min="0" step="0.0001" value="0" />
     <br />
@@ -160,12 +160,12 @@
       document.getElementById('rugHoldings').textContent = `Holdings: ${holdings.rug.toFixed(6)} $RUG`;
     }
 
-    // Fetch live BTC price every 10 seconds
+    // Fetch live BTC price every 10 seconds from CoinGecko
     async function fetchBTCPrice() {
       try {
-        const res = await fetch('https://api.coindesk.com/v1/bpi/currentprice/USD.json');
+        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
         const data = await res.json();
-        prices.btc = parseFloat(data.bpi.USD.rate.replace(/,/g, ''));
+        prices.btc = data.bitcoin.usd;
         btcPriceEl.textContent = `$${prices.btc.toFixed(2)}`;
       } catch (e) {
         btcPriceEl.textContent = 'Error';
