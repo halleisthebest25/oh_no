@@ -12,11 +12,14 @@
       text-align: center;
       padding: 20px;
     }
-    h1 { font-size: 3rem; margin-bottom: 5px; }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 5px;
+    }
     .game {
       margin: 20px auto;
       padding: 20px;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0, 0, 0, 0.6);
       border-radius: 15px;
       max-width: 600px;
     }
@@ -29,8 +32,8 @@
       cursor: pointer;
     }
     button:disabled {
-      background-color: #999 !important;
-      cursor: wait !important;
+      background-color: #999;
+      cursor: wait;
     }
     button {
       background-color: #e67e22;
@@ -46,12 +49,17 @@
       padding: 10px;
       margin: 5px;
       border-radius: 5px;
-      font-size: 1.5rem;
+      font-size: 2rem;
       width: 100px;
-      height: 50px;
-      line-height: 50px;
+      height: 80px;
+      line-height: 80px;
       font-weight: bold;
-      user-select: none;
+      animation: pop 0.2s ease-out;
+    }
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
     }
     #result {
       margin-top: 20px;
@@ -75,14 +83,14 @@
   <h1>🎰 Gamble to Win! - Slots</h1>
   <div class="game">
     <p id="money">Current Money: $0</p>
-    <label for="betAmount">Enter Your Bet:</label>
+    <label>Enter Your Bet:</label>
     <input type="number" id="betAmount" min="1" value="100" />
     <br/>
     <button id="spinBtn" onclick="pullLever()">🎯 Pull Lever</button>
     <div id="slotsArea">
-      <div class="slot" id="slot1">?</div>
-      <div class="slot" id="slot2">?</div>
-      <div class="slot" id="slot3">?</div>
+      <div class="slot" id="slot1">❓</div>
+      <div class="slot" id="slot2">❓</div>
+      <div class="slot" id="slot3">❓</div>
     </div>
     <div id="result"></div>
     <a href="index.html">⬅ Back to Home</a>
@@ -90,26 +98,26 @@
 
   <script>
     const spinBtn = document.getElementById('spinBtn');
-    const moneyEl = document.getElementById('money');
     const resultEl = document.getElementById('result');
-    const slot1 = document.getElementById('slot1');
-    const slot2 = document.getElementById('slot2');
-    const slot3 = document.getElementById('slot3');
-
-    // Symbols with probabilities
-    // Order matters here; sum must be 100%
-    const symbols = [
-      {name:'duck', chance:39},
-      {name:'chocolate', chance:25},
-      {name:'bat', chance:14},
-      {name:'pistol', chance:9},
-      {name:'smg', chance:5},
-      {name:'car', chance:3},
-      {name:'atomic', chance:1.95},
-      {name:'7', chance:1.16}
+    const moneyEl = document.getElementById('money');
+    const slots = [
+      document.getElementById('slot1'),
+      document.getElementById('slot2'),
+      document.getElementById('slot3'),
     ];
 
     let money = localStorage.getItem('money') ? parseInt(localStorage.getItem('money')) : 1000;
+
+    const symbolTable = [
+      { name: 'duck', chance: 39, emoji: '🦆' },
+      { name: 'chocolate', chance: 25, emoji: '🍫' },
+      { name: 'bat', chance: 14, emoji: '🏏' },
+      { name: 'pistol', chance: 9, emoji: '🔫' },
+      { name: 'smg', chance: 5, emoji: '💥' },
+      { name: 'car', chance: 3, emoji: '🚗' },
+      { name: 'atomic', chance: 1.95, emoji: '☢️' },
+      { name: '7', chance: 1.16, emoji: '7️⃣' }
+    ];
 
     function updateMoney() {
       moneyEl.innerText = `Current Money: $${money}`;
@@ -119,7 +127,7 @@
     function getBet() {
       const bet = parseInt(document.getElementById('betAmount').value);
       if (isNaN(bet) || bet <= 0) {
-        resultEl.innerText = '❗ Enter a valid bet amount.';
+        resultEl.innerText = '❗ Enter a valid bet.';
         return null;
       }
       if (bet > money) {
@@ -129,126 +137,81 @@
       return bet;
     }
 
-    // Pick one symbol based on weighted chance
     function pickSymbol() {
       let r = Math.random() * 100;
-      let cumulative = 0;
-      for (let s of symbols) {
-        cumulative += s.chance;
-        if (r < cumulative) return s.name;
+      let sum = 0;
+      for (let sym of symbolTable) {
+        sum += sym.chance;
+        if (r < sum) return sym;
       }
-      // fallback (should not happen)
-      return symbols[0].name;
+      return symbolTable[0];
     }
 
-    // Check all win combos and return multiplier and name or 0 if none
-    function checkWinCombo(slots) {
-      const [a,b,c] = slots;
+    function getResultMultiplier(names) {
+      const count = name => names.filter(n => n === name).length;
 
-      // Helper functions
-      function countSymbol(sym) {
-        return slots.filter(s => s === sym).length;
+      const combos = [
+        { match: n => ['duck','chocolate','bat'].every(x => n.includes(x)), mult: 2, name: 'Pinata' },
+        { match: n => count('duck') === 3, mult: 3, name: 'Flock O Ducks' },
+        { match: n => count('duck') === 2 && count('pistol') === 1, mult: 3, name: 'Duck Hunting' },
+        { match: n => count('duck') === 2 && count('smg') === 1, mult: 4, name: 'Serious Duck Hunting' },
+        { match: n => count('chocolate') === 3, mult: 4, name: 'Sweet Tooth' },
+        { match: n => count('duck') === 2 && count('car') === 1, mult: 6, name: 'Road Kill' },
+        { match: n => count('chocolate') === 2 && count('atomic') === 1, mult: 7, name: 'Meltdown 1' },
+        { match: n => count('atomic') === 2 && count('chocolate') === 1, mult: 7, name: 'Meltdown 2' },
+        { match: n => count('car') === 2 && count('bat') === 1, mult: 8, name: 'Vandalism' },
+        { match: n => count('car') === 1 && count('bat') === 2, mult: 8, name: 'Vandalism 2' },
+        { match: n => count('bat') === 3, mult: 8, name: 'Homerun' },
+        { match: n => count('smg') === 2 && count('pistol') === 1, mult: 10, name: 'Gunfight' },
+        { match: n => count('smg') === 1 && count('pistol') === 2, mult: 10, name: 'Gunfight 2' },
+        { match: n => count('car') === 1 && (count('pistol') === 2 || count('smg') === 2), mult: 20, name: 'Driveby' },
+        { match: n => count('pistol') === 3, mult: 40, name: 'Firing Range' },
+        { match: n => count('smg') === 3, mult: 200, name: 'Overkill' },
+        { match: n => count('car') === 3, mult: 1000, name: 'Pileup' },
+        { match: n => count('atomic') === 3, mult: 2000, name: 'Radioactive' },
+        { match: n => count('7') === 3, mult: 10000, name: 'JACKPOT' }
+      ];
+
+      for (let combo of combos) {
+        if (combo.match(names)) return combo;
       }
 
-      // 1. Pinata: all duck, chocolate, and bat in any order (2x)
-      const pinataSet = ['duck','chocolate','bat'];
-      if (pinataSet.every(s => slots.includes(s)) && slots.length === 3) return {mult:2, name:'Pinata'};
-
-      // 2. Flock O Ducks: 3 ducks (3x)
-      if (countSymbol('duck') === 3) return {mult:3, name:'Flock O Ducks'};
-
-      // 3. Duck Hunting: 2 ducks + 1 pistol (3x)
-      if (countSymbol('duck') === 2 && countSymbol('pistol') === 1) return {mult:3, name:'Duck Hunting'};
-
-      // 4. Serious Duck Hunting: 1 smg + 2 ducks (4x)
-      if (countSymbol('smg') === 1 && countSymbol('duck') === 2) return {mult:4, name:'Serious Duck Hunting'};
-
-      // 5. Sweet Tooth: 3 chocolate (4x)
-      if (countSymbol('chocolate') === 3) return {mult:4, name:'Sweet Tooth'};
-
-      // 6. Road Kill: 2 ducks + 1 car (6x)
-      if (countSymbol('duck') === 2 && countSymbol('car') === 1) return {mult:6, name:'Road Kill'};
-
-      // 7. Meltdown 1: 2 chocolate + 1 atomic (7x)
-      if (countSymbol('chocolate') === 2 && countSymbol('atomic') === 1) return {mult:7, name:'Meltdown 1'};
-
-      // 8. Meltdown 2: 2 atomic + 1 chocolate (7x)
-      if (countSymbol('atomic') === 2 && countSymbol('chocolate') === 1) return {mult:7, name:'Meltdown 2'};
-
-      // 9. Vandalism: 2 car + 1 bat (8x)
-      if (countSymbol('car') === 2 && countSymbol('bat') === 1) return {mult:8, name:'Vandalism'};
-
-      // 10. Vandalism 2: 1 car + 2 bat (8x)
-      if (countSymbol('car') === 1 && countSymbol('bat') === 2) return {mult:8, name:'Vandalism 2'};
-
-      // 11. Homerun: 3 bats (8x)
-      if (countSymbol('bat') === 3) return {mult:8, name:'Homerun'};
-
-      // 12. Gunfight: 2 smg + 1 pistol (10x)
-      if (countSymbol('smg') === 2 && countSymbol('pistol') === 1) return {mult:10, name:'Gunfight'};
-
-      // 13. Gunfight 2: 1 smg + 2 pistol (10x)
-      if (countSymbol('smg') === 1 && countSymbol('pistol') === 2) return {mult:10, name:'Gunfight 2'};
-
-      // 14. Driveby: 1 car + 2 pistol or 2 smg (20x)
-      if (countSymbol('car') === 1 && (countSymbol('pistol') === 2 || countSymbol('smg') === 2)) return {mult:20, name:'Driveby'};
-
-      // 15. Firing Range: 3 pistol (40x)
-      if (countSymbol('pistol') === 3) return {mult:40, name:'Firing Range'};
-
-      // 16. Overkill: 3 smg (200x)
-      if (countSymbol('smg') === 3) return {mult:200, name:'Overkill'};
-
-      // 17. Pileup: 3 cars (1000x)
-      if (countSymbol('car') === 3) return {mult:1000, name:'Pileup'};
-
-      // 18. Radioactive: 3 atomic (2000x)
-      if (countSymbol('atomic') === 3) return {mult:2000, name:'Radioactive'};
-
-      // 19. Jackpot: 3 7 (10000x)
-      if (countSymbol('7') === 3) return {mult:10000, name:'JACKPOT'};
-
-      return {mult:0, name:''};
+      return { mult: 0, name: null };
     }
 
-    let spinning = false;
-
-    function pullLever() {
-      if (spinning) return; // cooldown
+    async function pullLever() {
       const bet = getBet();
       if (!bet) return;
 
-      spinning = true;
-      spinBtn.disabled = true;
-      resultEl.innerText = 'Spinning...';
       money -= bet;
       updateMoney();
+      resultEl.innerText = 'Spinning...';
+      spinBtn.disabled = true;
 
-      slot1.textContent = '?';
-      slot2.textContent = '?';
-      slot3.textContent = '?';
+      const spinResult = [];
 
-      // Simulate spinning animation with timeout, 1 second
-      setTimeout(() => {
-        const slots = [pickSymbol(), pickSymbol(), pickSymbol()];
-        slot1.textContent = slots[0];
-        slot2.textContent = slots[1];
-        slot3.textContent = slots[2];
+      for (let i = 0; i < 3; i++) {
+        await new Promise(resolve => setTimeout(resolve, 400));
+        const sym = pickSymbol();
+        slots[i].textContent = sym.emoji;
+        slots[i].style.animation = 'none';
+        void slots[i].offsetWidth; // trigger reflow
+        slots[i].style.animation = 'pop 0.2s ease-out';
+        spinResult.push(sym.name);
+      }
 
-        const win = checkWinCombo(slots);
+      const result = getResultMultiplier(spinResult);
 
-        if (win.mult > 0) {
-          const winAmount = bet * win.mult;
-          money += winAmount;
-          resultEl.innerText = `🎉 You hit "${win.name}" and win $${winAmount}!`;
-        } else {
-          resultEl.innerText = `💀 You lost $${bet}.`;
-        }
+      if (result.mult > 0) {
+        const win = bet * result.mult;
+        money += win;
+        resultEl.innerText = `🎉 ${result.name}! You win $${win}`;
+      } else {
+        resultEl.innerText = `💀 You lost $${bet}`;
+      }
 
-        updateMoney();
-        spinning = false;
-        spinBtn.disabled = false;
-      }, 1000);
+      updateMoney();
+      spinBtn.disabled = false;
     }
 
     updateMoney();
