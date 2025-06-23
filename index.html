@@ -1,254 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Gamble to Win!</title>
+  <title>Gamble to Win! - Home</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      background: #1e2b38;
       color: white;
       text-align: center;
-      padding: 20px;
+      font-family: sans-serif;
+      padding: 40px;
     }
-    h1 {
-      font-size: 3rem;
-    }
-    .game {
-      margin: 20px auto;
-      padding: 20px;
-      background: rgba(0, 0, 0, 0.6);
-      border-radius: 15px;
-      width: 80%;
-    }
-    button, input[type="number"] {
-      padding: 10px 20px;
+    h1 { font-size: 3rem; }
+    button {
+      padding: 15px 30px;
+      font-size: 1.2rem;
       margin: 10px;
-      font-size: 1rem;
       border: none;
       border-radius: 10px;
-    }
-    button {
-      background-color: #e67e22;
+      background: #e67e22;
       color: white;
       cursor: pointer;
     }
-    button:hover {
-      background-color: #d35400;
-    }
-    .slot, .card {
-      display: inline-block;
-      background: white;
-      color: black;
-      padding: 10px;
-      margin: 5px;
-      border-radius: 5px;
-      font-size: 2rem;
-      width: 60px;
-      height: 60px;
-      line-height: 60px;
-    }
-    .spinning {
-      animation: spin 0.5s linear infinite;
-    }
-    @keyframes spin {
-      0% { transform: rotateX(0); }
-      100% { transform: rotateX(360deg); }
-    }
+    button:hover { background: #d35400; }
+    #moneyDisplay { font-size: 1.5rem; margin: 20px 0; }
   </style>
 </head>
 <body>
-  <h1>Gamble to Win!</h1>
-  <p id="money">Current Money: $1000</p>
-  <div class="game">
-    <h2>Enter Your Bet</h2>
-    <input type="number" id="betAmount" placeholder="Enter bet" min="1" value="100" />
-  </div>
-
-  <div class="game">
-    <h2>Slots 🎰</h2>
-    <button onclick="pullLever()">🎯 Pull Lever</button>
-    <div id="slotsArea">
-      <div class="slot" id="slot1">❓</div>
-      <div class="slot" id="slot2">❓</div>
-      <div class="slot" id="slot3">❓</div>
-    </div>
-  </div>
-
-  <div class="game">
-    <h2>Blackjack 🃏</h2>
-    <button onclick="startBlackjack()">Start Blackjack</button>
-    <div id="blackjackArea" style="margin-top: 10px;"></div>
-    <div id="bjControls" style="display:none;">
-      <button onclick="hit()">Hit</button>
-      <button onclick="stand()">Stand</button>
-      <button onclick="surrender()">Surrender</button>
-    </div>
-  </div>
+  <h1>💰 Gamble to Win!</h1>
+  <div id="moneyDisplay">Current Money: $0</div>
+  <button onclick="work()">💪 Work Hard (+$5)</button>
+  <br><br>
+  <a href="slots.html"><button>🎰 Play Slots</button></a>
+  <a href="blackjack.html"><button>🃏 Play Blackjack</button></a>
+  <a href="lottery.html"><button>🎟️ Play Lottery</button></a>
 
   <script>
-    let money = localStorage.getItem('money') ? parseInt(localStorage.getItem('money')) : 1000;
-    let playerCards = [], dealerCards = [], currentBet = 0;
-    const symbols = ['🍒', '🍋', '🔔', '⭐', '7', '🍉', '💎'];
-
-    function updateMoney() {
-      document.getElementById('money').innerText = `Current Money: $${money}`;
-      localStorage.setItem('money', money);
+    let money = localStorage.getItem("money");
+    if (!money) {
+      money = 1000;
+      localStorage.setItem("money", money);
     }
 
-    function getBet() {
-      const bet = parseInt(document.getElementById('betAmount').value);
-      if (isNaN(bet) || bet <= 0) {
-        alert('Enter valid bet');
-        return null;
-      }
-      if (bet > money) {
-        alert('Not enough money!');
-        return null;
-      }
-      return bet;
+    function updateDisplay() {
+      document.getElementById("moneyDisplay").innerText = `Current Money: $${localStorage.getItem("money")}`;
     }
 
-    function pullLever() {
-      const bet = getBet();
-      if (!bet) return;
-      money -= bet;
-      updateMoney();
-
-      const s1 = document.getElementById('slot1');
-      const s2 = document.getElementById('slot2');
-      const s3 = document.getElementById('slot3');
-
-      s1.classList.add('spinning');
-      s2.classList.add('spinning');
-      s3.classList.add('spinning');
-
-      setTimeout(() => {
-        s1.classList.remove('spinning');
-        s2.classList.remove('spinning');
-        s3.classList.remove('spinning');
-
-        const a = symbols[Math.floor(Math.random()*symbols.length)];
-        const b = symbols[Math.floor(Math.random()*symbols.length)];
-        const c = symbols[Math.floor(Math.random()*symbols.length)];
-        s1.textContent = a;
-        s2.textContent = b;
-        s3.textContent = c;
-
-        let payout = 0;
-        if (a === b && b === c) {
-          payout = bet * 10;
-        } else if (a === b || b === c || a === c) {
-          payout = bet * 3;
-        } else if ([a,b,c].includes('7')) {
-          payout = bet * 2;
-        }
-
-        if (payout > 0) {
-          alert(`You win $${payout}!`);
-          money += payout;
-        } else {
-          alert(`You lost $${bet}.`);
-        }
-        updateMoney();
-      }, 1000);
+    function work() {
+      let cash = parseInt(localStorage.getItem("money"));
+      cash += 5;
+      localStorage.setItem("money", cash);
+      updateDisplay();
     }
 
-    function getCardValue(card) {
-      let rank = card.slice(0, -1);
-      if (['J','Q','K'].includes(rank)) return 10;
-      if (rank === 'A') return 11;
-      return parseInt(rank);
-    }
-
-    function drawCard() {
-      const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
-      const suits = ['♠','♥','♦','♣'];
-      return ranks[Math.floor(Math.random()*13)] + suits[Math.floor(Math.random()*4)];
-    }
-
-    function calcScore(cards) {
-      let total = 0, aces = 0;
-      for (let c of cards) {
-        let val = getCardValue(c);
-        total += val;
-        if (c.startsWith('A')) aces++;
-      }
-      while (total > 21 && aces) {
-        total -= 10;
-        aces--;
-      }
-      return total;
-    }
-
-    function renderCards() {
-      const area = document.getElementById('blackjackArea');
-      area.innerHTML = `<p>Your Cards: ${playerCards.map(c=>`<span class="card">${c}</span>`).join('')} (Score: ${calcScore(playerCards)})</p>
-                        <p>Dealer: ${dealerCards.map(c=>`<span class="card">${c}</span>`).join('')}</p>`;
-    }
-
-    function startBlackjack() {
-      const bet = getBet();
-      if (!bet) return;
-      currentBet = bet;
-      money -= bet;
-      updateMoney();
-
-      playerCards = [drawCard(), drawCard()];
-      dealerCards = [drawCard()];
-      renderCards();
-      document.getElementById('bjControls').style.display = 'block';
-
-      if (calcScore(playerCards) === 21) {
-        alert("Blackjack! You win 1.5x!");
-        money += bet * 2.5;
-        updateMoney();
-        document.getElementById('bjControls').style.display = 'none';
-      }
-    }
-
-    function hit() {
-      playerCards.push(drawCard());
-      renderCards();
-      const score = calcScore(playerCards);
-      if (score > 21) {
-        alert("Bust! You lose.");
-        document.getElementById('bjControls').style.display = 'none';
-        updateMoney();
-      }
-    }
-
-    function stand() {
-      while (calcScore(dealerCards) < 17) {
-        dealerCards.push(drawCard());
-      }
-      const playerScore = calcScore(playerCards);
-      const dealerScore = calcScore(dealerCards);
-      renderCards();
-      let msg = '';
-      if (dealerScore > 21 || playerScore > dealerScore) {
-        msg = `You win $${currentBet}!`;
-        money += currentBet * 2;
-      } else if (dealerScore === playerScore) {
-        msg = "Push. You get your bet back.";
-        money += currentBet;
-      } else {
-        msg = "You lose.";
-      }
-      alert(msg);
-      document.getElementById('bjControls').style.display = 'none';
-      updateMoney();
-    }
-
-    function surrender() {
-      alert(`You surrender. Half of $${currentBet} returned.`);
-      money += Math.floor(currentBet / 2);
-      document.getElementById('bjControls').style.display = 'none';
-      updateMoney();
-    }
-
-    updateMoney();
+    updateDisplay();
   </script>
 </body>
 </html>
