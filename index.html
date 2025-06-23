@@ -1,36 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALERT!!!!!</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-        img {
-            width: 300px;
-            height: auto;
-            margin: 10px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gamble to Win!</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 3rem;
+    }
+    .game {
+      margin: 20px auto;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 15px;
+      width: 80%;
+    }
+    button, input[type="number"] {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 10px;
+    }
+    button {
+      background-color: #e67e22;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #d35400;
+    }
+    .card {
+      display: inline-block;
+      background: white;
+      color: black;
+      padding: 10px;
+      margin: 5px;
+      border-radius: 5px;
+      width: 50px;
+    }
+    .slot {
+      display: inline-block;
+      font-size: 2rem;
+      background: white;
+      color: black;
+      width: 50px;
+      margin: 5px;
+      padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
-    <h1>SOME GROUP OF RUSSIAN HACKERS BREACHED YOUR PC!!</h1>
-    <p>This is a secure message to help you out in this situation. A file you downloaded had some Russian shit inside, the hackers are in your system ready to KABOOM your computer!!
-    DO NOT TRY TO USE ANTIVIRUS, if you do, the hackers will be mad and delete your system RIGHT NOW!!!!!
-    Instead, you can pay them some crypto and they will let you go. However, if you don't pay them in 1 hour, they will destroy your system and destrot windows, all your personal data stolen, all your files deleted and sold.</p>
-    <p>THIS IS A WARNING!!!</p>
-    <p>Crypto wallet address: send to</p>
-    <p>Bitcoin:  bc1q59d96f3rj3f2g4x4q04kadx46pacf2zznfqy3l</p>
-    <p>Etherium:  0x4ab4cF33630E038827D30F8982B1D48b459Eaa73</p>
-    <p>Litecoin:  ltc1qt3789tsy9h4jhug9j7gcmd29rsmklcj428ank8</p>
-    <p>Solana:  2WaAB38UYaZdbYrAhxgviTybiDD9j43Er86bx9Anpwvi</p>
+  <h1>Gamble to Win!</h1>
+  <p id="money">Current Money: $1000</p>
+  <div class="game">
+    <h2>Choose Your Bet</h2>
+    <input type="number" id="betAmount" placeholder="Enter your bet" min="1" value="100" />
+  </div>
+  <div class="game">
+    <h2>Choose Your Game</h2>
+    <button onclick="playSlot()">Slot Machine</button>
+    <button onclick="playBlackjack()">Blackjack</button>
+    <button onclick="playRoulette()">Roulette</button>
+    <button onclick="playHighLow()">High-Low</button>
+  </div>
 
-    <p>DO NOT IGNORE THIS WARNING!!! THE HACKERS ARE WATCHING YOU!! </p>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Anonymous.svg/866px-Anonymous.svg.png" alt="HACKED">
-    <img src="https://assets.publishing.service.gov.uk/media/62473c53e90e075f06b372ed/emblem.PNG" alt="Россия!!">
+  <div class="game" id="output"></div>
+
+  <script>
+    let money = localStorage.getItem('money') ? parseInt(localStorage.getItem('money')) : 1000;
+    const output = document.getElementById('output');
+
+    function updateMoney() {
+      document.getElementById('money').innerText = `Current Money: $${money}`;
+      localStorage.setItem('money', money);
+    }
+
+    function getBet() {
+      const bet = parseInt(document.getElementById('betAmount').value);
+      if (isNaN(bet) || bet <= 0) {
+        alert('Please enter a valid bet amount.');
+        return null;
+      }
+      if (money < bet) {
+        alert('Not enough money!');
+        return null;
+      }
+      return bet;
+    }
+
+    function getCard() {
+      const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+      const suits = ['♠','♥','♦','♣'];
+      return ranks[Math.floor(Math.random()*13)] + suits[Math.floor(Math.random()*4)];
+    }
+
+    function playSlot() {
+      const bet = getBet();
+      if (!bet) return;
+      money -= bet;
+      const symbols = ['🍒','🍋','🔔','⭐','7'];
+      const slot1 = symbols[Math.floor(Math.random()*symbols.length)];
+      const slot2 = symbols[Math.floor(Math.random()*symbols.length)];
+      const slot3 = symbols[Math.floor(Math.random()*symbols.length)];
+      output.innerHTML = `<div class='slot'>${slot1}</div><div class='slot'>${slot2}</div><div class='slot'>${slot3}</div>`;
+
+      if (slot1 === slot2 && slot2 === slot3) {
+        money += bet * 10;
+        alert('JACKPOT! You win 10x your bet!');
+      } else if (slot1 === slot2 || slot2 === slot3 || slot1 === slot3) {
+        money += bet * 3;
+        alert('Nice! You win 3x your bet!');
+      } else {
+        alert(`You lost $${bet}.`);
+      }
+      updateMoney();
+    }
+
+    function playBlackjack() {
+      const bet = getBet();
+      if (!bet) return;
+      money -= bet;
+
+      const playerCard1 = getCard();
+      const playerCard2 = getCard();
+      const dealerCard = getCard();
+
+      const playerScore = Math.floor(Math.random()*6)+16;
+      const dealerScore = Math.floor(Math.random()*6)+16;
+
+      output.innerHTML = `<div class='card'>${playerCard1}</div><div class='card'>${playerCard2}</div><br><div>Dealer: ${dealerCard}</div>`;
+
+      let result = `You: ${playerScore}, Dealer: ${dealerScore}\n`;
+      if (playerScore > 21 || (dealerScore <= 21 && dealerScore > playerScore)) {
+        result += 'You lose.';
+      } else if (playerScore === dealerScore) {
+        money += bet;
+        result += 'Push. You get your money back.';
+      } else {
+        money += bet * 2;
+        result += `You win $${bet}!`;
+      }
+      alert(result);
+      updateMoney();
+    }
+
+    function playRoulette() {
+      const bet = getBet();
+      if (!bet) return;
+      money -= bet;
+      const outcome = Math.floor(Math.random() * 37);
+      const guess = prompt('Pick a number (0-36):');
+      if (parseInt(guess) === outcome) {
+        money += bet * 36;
+        alert(`Lucky! The ball landed on ${outcome}. You win $${bet * 36}!`);
+      } else {
+        alert(`Unlucky! The ball landed on ${outcome}. You lose.`);
+      }
+      updateMoney();
+    }
+
+    function playHighLow() {
+      const bet = getBet();
+      if (!bet) return;
+      money -= bet;
+      const num = Math.floor(Math.random() * 10) + 1;
+      const guess = prompt('High or Low? (Enter "high" for 6-10, "low" for 1-5)');
+      if ((num >= 6 && guess.toLowerCase() === 'high') || (num <= 5 && guess.toLowerCase() === 'low')) {
+        money += bet * 2;
+        alert(`Correct! Number was ${num}. You win $${bet * 2}!`);
+      } else {
+        alert(`Wrong! Number was ${num}. You lose.`);
+      }
+      updateMoney();
+    }
+
+    updateMoney();
+  </script>
 </body>
 </html>
