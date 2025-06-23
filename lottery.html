@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gamble to Win! - Lottery</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 { font-size: 3rem; margin-bottom: 5px; }
+    .game {
+      margin: 20px auto;
+      padding: 20px;
+      background: rgba(0,0,0,0.6);
+      border-radius: 15px;
+      max-width: 600px;
+    }
+    button, input[type="number"] {
+      padding: 10px 20px;
+      margin: 10px 5px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    button {
+      background-color: #e67e22;
+      color: white;
+    }
+    button:hover {
+      background-color: #d35400;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 1.3rem;
+      white-space: pre-wrap;
+      min-height: 2em;
+    }
+    #lotteryInfo {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    a {
+      display: inline-block;
+      margin-top: 10px;
+      color: #e67e22;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    a:hover {
+      color: #d35400;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎟️ Gamble to Win! - Lottery</h1>
+  <div class="game">
+    <p id="money">Current Money: $0</p>
+    <p>Each ticket costs $10. Buy more tickets for a better chance to win!</p>
+    <input type="number" id="lotteryTickets" placeholder="Tickets to buy" min="1" value="1" />
+    <br />
+    <button onclick="buyTickets()">Buy Tickets</button>
+    <button onclick="checkLottery()">Check Result</button>
+    <p id="lotteryInfo"></p>
+    <div id="result"></div>
+    <a href="index.html">⬅ Back to Home</a>
+  </div>
+
+  <script>
+    let money = localStorage.getItem('money') ? parseInt(localStorage.getItem('money')) : 1000;
+    const moneyEl = document.getElementById('money');
+    const resultEl = document.getElementById('result');
+    const infoEl = document.getElementById('lotteryInfo');
+
+    let playerTickets = 0;
+    let totalTickets = 0;
+    let winningTicket = 0;
+
+    function updateMoney() {
+      moneyEl.innerText = `Current Money: $${money}`;
+      localStorage.setItem('money', money);
+    }
+
+    function buyTickets() {
+      const ticketCount = parseInt(document.getElementById("lotteryTickets").value);
+      if (isNaN(ticketCount) || ticketCount <= 0) {
+        resultEl.innerText = "❗ Enter a valid number of tickets.";
+        return;
+      }
+
+      const cost = ticketCount * 10;
+      if (money < cost) {
+        resultEl.innerText = "❌ Not enough money to buy tickets.";
+        return;
+      }
+
+      money -= cost;
+      playerTickets = ticketCount;
+
+      // Randomize total tickets sold by others between 50000 and 100000
+      totalTickets = Math.floor(Math.random() * 50001) + 50000;
+
+      // Winning ticket chosen among total tickets (others + player’s)
+      winningTicket = Math.floor(Math.random() * (totalTickets + playerTickets)) + 1;
+
+      infoEl.innerText = `🎟️ You bought ${playerTickets} ticket(s). Competing with ${totalTickets} others.\nClick "Check Result" to see if you win!`;
+      resultEl.innerText = "";
+      updateMoney();
+    }
+
+    function checkLottery() {
+      if (playerTickets === 0) {
+        resultEl.innerText = "❗ Buy tickets first!";
+        return;
+      }
+
+      const playerRangeStart = totalTickets + 1;
+      const playerRangeEnd = totalTickets + playerTickets;
+
+      if (winningTicket >= playerRangeStart && winningTicket <= playerRangeEnd) {
+        const prize = 100000;
+        resultEl.innerText = `🎉 JACKPOT! Winning ticket #${winningTicket} is yours!\nYou win $${prize}!`;
+        money += prize;
+      } else {
+        resultEl.innerText = `😢 You lost. Winning ticket was #${winningTicket}. Better luck next time!`;
+      }
+
+      // Reset for next round
+      playerTickets = 0;
+      totalTickets = 0;
+      winningTicket = 0;
+      infoEl.innerText = "";
+      updateMoney();
+    }
+
+    updateMoney();
+  </script>
+</body>
+</html>
