@@ -149,7 +149,6 @@
 
     function getResultMultiplier(names) {
       const count = name => names.filter(n => n === name).length;
-
       const combos = [
         { match: n => ['duck','chocolate','bat'].every(x => n.includes(x)), mult: 2, name: 'Pinata' },
         { match: n => count('duck') === 3, mult: 3, name: 'Flock O Ducks' },
@@ -175,7 +174,6 @@
       for (let combo of combos) {
         if (combo.match(names)) return combo;
       }
-
       return { mult: 0, name: null };
     }
 
@@ -188,24 +186,24 @@
       resultEl.innerText = 'Spinning...';
       spinBtn.disabled = true;
 
-      const spinResult = [];
+      // Show question marks first
+      for (let slot of slots) slot.textContent = '❓';
+
+      const result = [];
 
       for (let i = 0; i < 3; i++) {
-        await new Promise(resolve => setTimeout(resolve, 400));
+        await new Promise(res => setTimeout(res, 500));
         const sym = pickSymbol();
         slots[i].textContent = sym.emoji;
-        slots[i].style.animation = 'none';
-        void slots[i].offsetWidth; // trigger reflow
-        slots[i].style.animation = 'pop 0.2s ease-out';
-        spinResult.push(sym.name);
+        result.push(sym.name);
       }
 
-      const result = getResultMultiplier(spinResult);
+      const combo = getResultMultiplier(result);
 
-      if (result.mult > 0) {
-        const win = bet * result.mult;
+      if (combo.mult > 0) {
+        const win = bet * combo.mult;
         money += win;
-        resultEl.innerText = `🎉 ${result.name}! You win $${win}`;
+        resultEl.innerText = `🎉 ${combo.name}! You win $${win}`;
       } else {
         resultEl.innerText = `💀 You lost $${bet}`;
       }
