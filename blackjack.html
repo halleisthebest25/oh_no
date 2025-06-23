@@ -66,6 +66,7 @@
       font-size: 1.2rem;
       margin-top: 15px;
       min-height: 1.2em;
+      white-space: pre-wrap;
     }
     a {
       color: #e67e22;
@@ -145,18 +146,29 @@
       return parseInt(rank);
     }
 
-    function calculateScore(hand) {
-      let score = 0, aces = 0;
+    // Returns array of possible scores considering Ace as 1 or 11
+    function getPossibleScores(hand) {
+      let baseScore = 0;
+      let aces = 0;
       for (let card of hand) {
         let val = getCardValue(card);
-        score += val;
+        baseScore += val;
         if (card.startsWith('A')) aces++;
       }
-      while (score > 21 && aces > 0) {
-        score -= 10;
-        aces--;
+
+      let scores = [baseScore];
+      for (let i = 1; i <= aces; i++) {
+        scores.push(baseScore - 10 * i);
       }
-      return score;
+      let validScores = scores.filter(s => s <= 21);
+      if (validScores.length === 0) validScores = [Math.min(...scores)];
+      return validScores.sort((a,b) => a-b);
+    }
+
+    function calculateScore(hand) {
+      // Return best valid score (max <=21)
+      const scores = getPossibleScores(hand);
+      return scores[scores.length-1];
     }
 
     async function showCard(card, container, hidden = false) {
@@ -222,10 +234,24 @@
     }
 
     function updateScores(hideDealer = false) {
-      playerScoreEl.innerText = `Score: ${calculateScore(playerCards)}`;
-      dealerScoreEl.innerText = hideDealer
-        ? `Score: ${getCardValue(dealerCards[0])}`
-        : `Score: ${calculateScore(dealerCards)}`;
+      // Show player scores nicely
+      let pScores = getPossibleScores(playerCards);
+      if (pScores.length > 1) {
+        playerScoreEl.innerText = `Score: ${pScores[0]} or ${pScores[pScores.length-1]}`;
+      } else {
+        playerScoreEl.innerText = `Score: ${pScores[0]}`;
+      }
+
+      if (hideDealer) {
+        dealerScoreEl.innerText = `Score: ${getCardValue(dealerCards[0])}`;
+      } else {
+        let dScores = getPossibleScores(dealerCards);
+        if (dScores.length > 1) {
+          dealerScoreEl.innerText = `Score: ${dScores[0]} or ${dScores[dScores.length-1]}`;
+        } else {
+          dealerScoreEl.innerText = `Score: ${dScores[0]}`;
+        }
+      }
     }
 
     function revealDealerHand() {
@@ -244,6 +270,9 @@
       const card = deck.pop();
       playerCards.push(card);
       hitBtn.disabled = true;
+      standBtn.disabled = true;
+      surrenderBtn.disabled = true;
+
       await showCard(card, playerHand);
       updateScores(true);
       const score = calculateScore(playerCards);
@@ -252,6 +281,8 @@
         endGame("💥 You busted! Dealer wins.");
       } else {
         hitBtn.disabled = false;
+        standBtn.disabled = false;
+        surrenderBtn.disabled = false;
       }
     }
 
