@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Gamble to Win! - Home</title>
+  <title>Home</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -41,10 +41,10 @@
   </style>
 </head>
 <body>
-  <h1>Gamble to Win!</h1>
+  <h1>Dashboard</h1>
   <div id="money">Money: $0</div>
 
-  <button id="workBtn">Work Hard (+$5)</button>
+  <button id="workBtn">Work Hard (+$1)</button>
   <br />
   <button onclick="location.href='slots.html'">Slots</button>
   <button onclick="location.href='blackjack.html'">Blackjack</button>
@@ -69,7 +69,7 @@
     workBtn.onclick = function() {
       // Check if medical course completed for $15 per click, else $5
       const medicalDone = localStorage.getItem('medicalDone') === 'true';
-      const earnAmount = medicalDone ? 15 : 5;
+      const earnAmount = medicalDone ? 15 : 1;
       money += earnAmount;
       updateMoney();
     };
