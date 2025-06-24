@@ -1,58 +1,101 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Gamble to Win! - Home</title>
   <style>
     body {
-      background: #1e2b38;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
       color: white;
       text-align: center;
-      font-family: sans-serif;
-      padding: 40px;
+      padding: 30px;
     }
-    h1 { font-size: 3rem; }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 20px;
+    }
+    #money {
+      font-size: 1.5rem;
+      margin-bottom: 25px;
+    }
     button {
+      font-size: 1.3rem;
       padding: 15px 30px;
-      font-size: 1.2rem;
       margin: 10px;
       border: none;
-      border-radius: 10px;
-      background: #e67e22;
-      color: white;
+      border-radius: 12px;
       cursor: pointer;
+      background-color: #e67e22;
+      color: white;
+      transition: background-color 0.3s ease;
     }
-    button:hover { background: #d35400; }
-    #moneyDisplay { font-size: 1.5rem; margin: 20px 0; }
+    button:disabled {
+      background-color: #555;
+      cursor: not-allowed;
+    }
+    button:hover:not(:disabled) {
+      background-color: #d35400;
+    }
   </style>
 </head>
 <body>
-  <h1>💰 Gamble to Win!</h1>
-  <div id="moneyDisplay">Current Money: $0</div>
-  <button onclick="work()">💪 Work Hard (+$5)</button>
-  <br><br>
-  <a href="slots.html"><button>🎰 Play Slots</button></a>
-  <a href="blackjack.html"><button>🃏 Play Blackjack</button></a>
-  <a href="lottery.html"><button>🎟️ Play Lottery</button></a>
+  <h1>Gamble to Win!</h1>
+  <div id="money">Money: $0</div>
+
+  <button id="workBtn">Work Hard (+$5)</button>
+  <br />
+  <button onclick="location.href='slots.html'">Slots</button>
+  <button onclick="location.href='blackjack.html'">Blackjack</button>
+  <button onclick="location.href='roulette.html'">Roulette</button>
+  <button onclick="location.href='lottery.html'">Lottery</button>
+  <br />
+  <button onclick="location.href='education.html'">Education</button>
+  <button id="cryptoBtn" disabled>Crypto (Locked)</button>
 
   <script>
-    let money = localStorage.getItem("money");
-    if (!money) {
-      money = 1000;
-      localStorage.setItem("money", money);
+    let money = parseFloat(localStorage.getItem('money')) || 1000;
+    const moneyDisplay = document.getElementById('money');
+    const workBtn = document.getElementById('workBtn');
+    const cryptoBtn = document.getElementById('cryptoBtn');
+
+    function updateMoney() {
+      moneyDisplay.innerText = `Money: $${money.toFixed(2)}`;
+      localStorage.setItem('money', money);
     }
 
-    function updateDisplay() {
-      document.getElementById("moneyDisplay").innerText = `Current Money: $${localStorage.getItem("money")}`;
+    workBtn.onclick = function() {
+      // Check if medical course completed for $15 per click, else $5
+      const medicalDone = localStorage.getItem('medicalDone') === 'true';
+      const earnAmount = medicalDone ? 15 : 5;
+      money += earnAmount;
+      updateMoney();
+    };
+
+    // Enable crypto button only if trading course done
+    function checkCryptoUnlock() {
+      const tradingDone = localStorage.getItem('tradingDone') === 'true';
+      if (tradingDone) {
+        cryptoBtn.disabled = false;
+        cryptoBtn.innerText = "Crypto";
+        cryptoBtn.onclick = () => location.href = 'crypto.html';
+      } else {
+        cryptoBtn.disabled = true;
+        cryptoBtn.innerText = "Crypto (Locked)";
+        cryptoBtn.onclick = null;
+      }
     }
 
-    function work() {
-      let cash = parseInt(localStorage.getItem("money"));
-      cash += 5;
-      localStorage.setItem("money", cash);
-      updateDisplay();
-    }
+    updateMoney();
+    checkCryptoUnlock();
 
-    updateDisplay();
+    // Update money display and crypto button every 5 seconds to stay in sync with other pages
+    setInterval(() => {
+      money = parseFloat(localStorage.getItem('money')) || money;
+      updateMoney();
+      checkCryptoUnlock();
+    }, 5000);
   </script>
 </body>
 </html>
