@@ -18,29 +18,29 @@
   table {
     margin: 0 auto 30px;
     border-collapse: collapse;
-    width: 300px;
+    width: 360px;
   }
   th, td {
-    padding: 10px;
+    padding: 8px;
     border: 1px solid white;
   }
   input[type=number] {
-    width: 80px;
-    padding: 8px;
+    width: 70px;
+    padding: 6px;
     border-radius: 6px;
     border: none;
     text-align: center;
     font-size: 1rem;
   }
   button {
-    padding: 8px 15px;
+    padding: 6px 12px;
     border: none;
     border-radius: 8px;
     background-color: #e67e22;
     color: white;
     font-weight: bold;
     cursor: pointer;
-    margin-left: 5px;
+    margin-left: 4px;
     transition: background-color 0.3s ease;
   }
   button:hover {
@@ -58,10 +58,16 @@
     margin-top: 20px;
     min-height: 40px;
   }
+  #moneyDisplay {
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+  }
 </style>
 </head>
 <body>
 <h1>Crypto Trading</h1>
+
+<div id="moneyDisplay">Money: $0</div>
 
 <table>
   <thead>
@@ -72,6 +78,8 @@
       <th>Buy</th>
       <th>Sell</th>
       <th>Your Coins</th>
+      <th></th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
@@ -108,7 +116,6 @@
   </tbody>
 </table>
 
-<div id="moneyDisplay">Money: $0</div>
 <div id="output"></div>
 
 <script>
@@ -132,6 +139,7 @@
     for (const c of Object.keys(coins)) {
       localStorage.setItem(c + 'Owned', coins[c].owned.toFixed(8));
     }
+    saveRugPrice();
   }
 
   // Display money and owned coins
@@ -187,7 +195,11 @@
   }
   function loadRugPrice() {
     const p = parseFloat(localStorage.getItem('rugPrice'));
-    coins.rug.price = (p && p > 0) ? p : 0.001;
+    if (p && p > 0) {
+      coins.rug.price = p;
+    } else {
+      coins.rug.price = 0.001;
+    }
     coins.rug.prevPrice = coins.rug.price;
   }
 
@@ -239,7 +251,10 @@
     }
     money -= cost;
     coin.owned += amount;
-    if (coinKey === 'rug') rugBoughtTime = Date.now(), rugPulled = false; // Start rug pump timer
+    if (coinKey === 'rug') {
+      rugBoughtTime = Date.now();
+      rugPulled = false;
+    }
     saveState();
     updateDisplay();
     showOutput(`Bought ${amount} ${coinKey.toUpperCase()} for $${cost.toFixed(2)}.`);
@@ -271,15 +286,12 @@
 
   // Update all prices every 5 seconds
   function updatePrices() {
-    // Save prev prices for btc and doge before change
     coins.btc.prevPrice = coins.btc.price;
     coins.doge.prevPrice = coins.doge.price;
 
-    // Random walk: btc +-1%, doge +-3%
     randomWalkPrice('btc', 1);
     randomWalkPrice('doge', 3);
 
-    // Rug price update
     updateRugPrice();
 
     updatePriceDisplay();
@@ -290,11 +302,9 @@
   updateDisplay();
   updatePriceDisplay();
 
-  // Start interval price updates every 5 sec
   setInterval(() => {
     updatePrices();
   }, 5000);
-
 </script>
 </body>
 </html>
