@@ -123,7 +123,7 @@
       const playerRangeEnd = totalTickets + playerTickets;
 
       if (winningTicket >= playerRangeStart && winningTicket <= playerRangeEnd) {
-        const prize = 100000;
+        const prize = 10 * totalTickets;
         resultEl.innerText = `🎉 JACKPOT! Winning ticket #${winningTicket} is yours!\nYou win $${prize}!`;
         money += prize;
       } else {
