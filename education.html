@@ -3,231 +3,208 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Gamble to Win! - Education</title>
+  <title>Education - Gamble to Win!</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: Arial, sans-serif;
       background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
       color: white;
       text-align: center;
-      padding: 20px;
+      padding: 30px;
     }
     h1 {
-      font-size: 3rem;
-      margin-bottom: 10px;
-    }
-    .course {
-      background: rgba(0, 0, 0, 0.6);
-      border-radius: 15px;
-      padding: 20px;
-      margin: 15px auto;
-      max-width: 600px;
-      text-align: left;
-    }
-    button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      border-radius: 10px;
-      border: none;
-      background-color: #e67e22;
-      color: white;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-    button:disabled {
-      background-color: #999;
-      cursor: not-allowed;
-    }
-    #money {
-      font-size: 1.4rem;
+      font-size: 2.8rem;
       margin-bottom: 20px;
     }
-    #timer {
-      font-size: 1.3rem;
-      margin-top: 10px;
-      min-height: 1.4em;
+    .course {
+      background: rgba(255, 255, 255, 0.1);
+      margin: 20px auto;
+      max-width: 600px;
+      padding: 20px;
+      border-radius: 12px;
+    }
+    button {
+      font-size: 1.2rem;
+      padding: 10px 25px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background-color: #e67e22;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    button:disabled {
+      background-color: #555;
+      cursor: not-allowed;
+    }
+    #status {
+      margin-top: 25px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #00ff88;
     }
     a {
-      display: inline-block;
-      margin-top: 15px;
-      color: #e67e22;
-      font-weight: bold;
-      text-decoration: none;
-    }
-    a:hover {
-      color: #d35400;
+      color: #74b9ff;
+      display: block;
+      margin-top: 30px;
     }
   </style>
 </head>
 <body>
-  <h1>🎓 Education Center</h1>
-  <p id="money">Money: $0</p>
+  <h1>Education</h1>
 
   <div class="course" id="hackingCourse">
-    <h2>1. Hacking</h2>
+    <h2>Hacking Course</h2>
     <p>Cost: $9000 | Duration: 10 minutes</p>
-    <p>Effect: 5% chance to get your bet back when you lose in casino games.</p>
-    <button onclick="startCourse('hacking')" id="hackingBtn">Buy & Start</button>
-    <p id="hackingTimer"></p>
+    <p>Effect: 5% chance to get your bet back when you lose in casino.</p>
+    <button id="hackingBtn">Start Hacking Course</button>
+    <div id="hackingTimer"></div>
   </div>
 
   <div class="course" id="tradingCourse">
-    <h2>2. Trading</h2>
+    <h2>Trading Course</h2>
     <p>Cost: $2000 | Duration: 5 minutes</p>
-    <p>Effect: Unlocks crypto trading (coming soon!)</p>
-    <button onclick="startCourse('trading')" id="tradingBtn">Buy & Start</button>
-    <p id="tradingTimer"></p>
+    <p>Effect: Unlocks Crypto trading.</p>
+    <button id="tradingBtn">Start Trading Course</button>
+    <div id="tradingTimer"></div>
   </div>
 
   <div class="course" id="medicalCourse">
-    <h2>3. Medical</h2>
+    <h2>Medical Course</h2>
     <p>Cost: $5000 | Duration: 20 minutes</p>
-    <p>Effect: Work hard button earns $15 per click instead of $5</p>
-    <button onclick="startCourse('medical')" id="medicalBtn">Buy & Start</button>
-    <p id="medicalTimer"></p>
+    <p>Effect: Work button earns $15 per click after completion.</p>
+    <button id="medicalBtn">Start Medical Course</button>
+    <div id="medicalTimer"></div>
   </div>
 
-  <p id="timer"></p>
+  <div id="status"></div>
   <a href="index.html">⬅ Back to Home</a>
 
   <script>
-    let money = localStorage.getItem('money') ? parseInt(localStorage.getItem('money')) : 1000;
+    let money = parseFloat(localStorage.getItem('money')) || 1000;
+
+    const hackingBtn = document.getElementById('hackingBtn');
+    const tradingBtn = document.getElementById('tradingBtn');
+    const medicalBtn = document.getElementById('medicalBtn');
+
+    const hackingTimerDiv = document.getElementById('hackingTimer');
+    const tradingTimerDiv = document.getElementById('tradingTimer');
+    const medicalTimerDiv = document.getElementById('medicalTimer');
+
+    const statusDiv = document.getElementById('status');
+
+    // Get course completion and timers from localStorage or defaults
     let hackingDone = localStorage.getItem('hackingDone') === 'true';
     let tradingDone = localStorage.getItem('tradingDone') === 'true';
     let medicalDone = localStorage.getItem('medicalDone') === 'true';
 
-    // Track course timers (store end timestamps)
-    let courseTimers = {
-      hacking: localStorage.getItem('hackingEnd') ? parseInt(localStorage.getItem('hackingEnd')) : 0,
-      trading: localStorage.getItem('tradingEnd') ? parseInt(localStorage.getItem('tradingEnd')) : 0,
-      medical: localStorage.getItem('medicalEnd') ? parseInt(localStorage.getItem('medicalEnd')) : 0
-    };
+    // Store end times for courses if any running (timestamp in ms)
+    let hackingEnd = parseInt(localStorage.getItem('hackingEnd')) || 0;
+    let tradingEnd = parseInt(localStorage.getItem('tradingEnd')) || 0;
+    let medicalEnd = parseInt(localStorage.getItem('medicalEnd')) || 0;
 
-    const moneyEl = document.getElementById('money');
-    const hackingBtn = document.getElementById('hackingBtn');
-    const tradingBtn = document.getElementById('tradingBtn');
-    const medicalBtn = document.getElementById('medicalBtn');
-    const hackingTimerEl = document.getElementById('hackingTimer');
-    const tradingTimerEl = document.getElementById('tradingTimer');
-    const medicalTimerEl = document.getElementById('medicalTimer');
-
-    const courseData = {
-      hacking: { cost: 9000, duration: 10 * 60 * 1000 }, // 10 min
-      trading: { cost: 2000, duration: 5 * 60 * 1000 },  // 5 min
-      medical: { cost: 5000, duration: 20 * 60 * 1000 }  // 20 min
-    };
-
-    function updateMoney() {
-      moneyEl.innerText = `Money: $${money}`;
-      localStorage.setItem('money', money);
+    // Update button states and timers UI
+    function updateUI() {
+      updateCourseUI('hacking', hackingDone, hackingEnd, hackingBtn, hackingTimerDiv, 10 * 60);
+      updateCourseUI('trading', tradingDone, tradingEnd, tradingBtn, tradingTimerDiv, 5 * 60);
+      updateCourseUI('medical', medicalDone, medicalEnd, medicalBtn, medicalTimerDiv, 20 * 60);
     }
 
-    function canStartCourse(name) {
-      if (courseTimers[name] > Date.now()) return false; // already running
-      if ((name === 'hacking' && hackingDone) ||
-          (name === 'trading' && tradingDone) ||
-          (name === 'medical' && medicalDone)) return false; // already done
-      return true;
-    }
-
-    function disableBtnIfRunning(name, btn) {
-      if (courseTimers[name] > Date.now()) {
+    function updateCourseUI(name, done, endTime, btn, timerDiv, durationSeconds) {
+      if (done) {
         btn.disabled = true;
-        btn.textContent = 'In Progress...';
-      } else if ((name === 'hacking' && hackingDone) ||
-                 (name === 'trading' && tradingDone) ||
-                 (name === 'medical' && medicalDone)) {
-        btn.disabled = true;
-        btn.textContent = 'Completed';
+        btn.innerText = `Completed ✓`;
+        timerDiv.innerText = "";
       } else {
-        btn.disabled = false;
-        btn.textContent = 'Buy & Start';
+        const now = Date.now();
+        if (endTime > now) {
+          btn.disabled = true;
+          let secondsLeft = Math.floor((endTime - now) / 1000);
+          timerDiv.innerText = `Time left: ${formatTime(secondsLeft)}`;
+        } else {
+          btn.disabled = false;
+          btn.innerText = `Start ${capitalize(name)} Course`;
+          timerDiv.innerText = "";
+        }
       }
     }
 
-    function startCourse(name) {
-      if (!canStartCourse(name)) return;
+    // Format seconds to MM:SS
+    function formatTime(s) {
+      let m = Math.floor(s / 60);
+      let sec = s % 60;
+      return `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+    }
 
-      if (money < courseData[name].cost) {
-        alert('Not enough money!');
+    // Capitalize first letter
+    function capitalize(s) {
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    // Start course handlers
+    hackingBtn.onclick = () => startCourse('hacking', 9000, 10 * 60);
+    tradingBtn.onclick = () => startCourse('trading', 2000, 5 * 60);
+    medicalBtn.onclick = () => startCourse('medical', 5000, 20 * 60);
+
+    function startCourse(course, cost, durationSec) {
+      if (money < cost) {
+        statusDiv.innerText = `Not enough money to start ${capitalize(course)} course.`;
         return;
       }
-
-      money -= courseData[name].cost;
-      updateMoney();
-
-      const endTime = Date.now() + courseData[name].duration;
-      courseTimers[name] = endTime;
-      localStorage.setItem(`${name}End`, endTime);
-
-      disableBtnIfRunning(name, document.getElementById(`${name}Btn`));
+      money -= cost;
+      localStorage.setItem('money', money);
+      const endTime = Date.now() + durationSec * 1000;
+      localStorage.setItem(`${course}End`, endTime);
+      statusDiv.innerText = `Started ${capitalize(course)} course. You can play casino games while waiting.`;
       updateTimers();
+      updateUI();
     }
 
+    // Check if courses ended
     function updateTimers() {
       const now = Date.now();
 
-      // Helper function to format time mm:ss
-      function formatTime(ms) {
-        const totalSeconds = Math.floor(ms / 1000);
-        const m = Math.floor(totalSeconds / 60);
-        const s = totalSeconds % 60;
-        return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-      }
-
-      // Check each course timer
-      for (const name of ['hacking', 'trading', 'medical']) {
-        const remaining = courseTimers[name] - now;
-        const timerEl = document.getElementById(`${name}Timer`);
-        const btn = document.getElementById(`${name}Btn`);
-
-        if (remaining > 0) {
-          timerEl.textContent = `Time left: ${formatTime(remaining)}`;
-          btn.disabled = true;
-          btn.textContent = 'In Progress...';
-        } else if (!window[`${name}Done`]) {
-          timerEl.textContent = '';
-          btn.disabled = false;
-          btn.textContent = 'Buy & Start';
-        } else {
-          timerEl.textContent = '';
-          btn.disabled = true;
-          btn.textContent = 'Completed';
-        }
-      }
-
-      // Check if courses just finished
-      if (!hackingDone && courseTimers.hacking <= now && localStorage.getItem('hackingEnd')) {
+      // Hacking
+      if (!hackingDone && hackingEnd > 0 && hackingEnd <= now) {
         hackingDone = true;
         localStorage.setItem('hackingDone', 'true');
-        alert('Hacking course completed! 5% chance to get your bet back when you lose.');
+        localStorage.removeItem('hackingEnd');
+        statusDiv.innerText = 'Hacking course completed! 5% bet refund unlocked.';
       }
-      if (!tradingDone && courseTimers.trading <= now && localStorage.getItem('tradingEnd')) {
+
+      // Trading
+      if (!tradingDone && tradingEnd > 0 && tradingEnd <= now) {
         tradingDone = true;
         localStorage.setItem('tradingDone', 'true');
-        alert('Trading course completed! Crypto trading unlocked (coming soon).');
+        localStorage.removeItem('tradingEnd');
+        statusDiv.innerText = 'Trading course completed! Crypto trading unlocked.';
       }
-      if (!medicalDone && courseTimers.medical <= now && localStorage.getItem('medicalEnd')) {
+
+      // Medical
+      if (!medicalDone && medicalEnd > 0 && medicalEnd <= now) {
         medicalDone = true;
         localStorage.setItem('medicalDone', 'true');
-        alert('Medical course completed! Work hard button now earns $15 per click.');
+        localStorage.removeItem('medicalEnd');
+        statusDiv.innerText = 'Medical course completed! Work button earns $15 per click now.';
       }
 
-      setTimeout(updateTimers, 1000);
+      // Update variables from storage for next check
+      hackingEnd = parseInt(localStorage.getItem('hackingEnd')) || 0;
+      tradingEnd = parseInt(localStorage.getItem('tradingEnd')) || 0;
+      medicalEnd = parseInt(localStorage.getItem('medicalEnd')) || 0;
+
+      updateUI();
     }
 
-    updateMoney();
-    disableBtnIfRunning('hacking', hackingBtn);
-    disableBtnIfRunning('trading', tradingBtn);
-    disableBtnIfRunning('medical', medicalBtn);
-    updateTimers();
+    // Check timers every second
+    setInterval(() => {
+      updateTimers();
+    }, 1000);
 
-    // Expose course status for other pages to check
-    window.educationStatus = {
-      hackingDone,
-      tradingDone,
-      medicalDone
-    };
+    // Load initial UI state
+    updateUI();
+
   </script>
 </body>
 </html>
