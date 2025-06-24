@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Black Market</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #111; color: #fff; text-align: center; padding: 20px; }
+    h1 { margin-bottom: 20px; }
+    .section { background: rgba(255,255,255,0.1); padding: 15px; margin: 15px auto; border-radius: 10px; max-width: 600px; }
+    .section h2 { margin-top: 0; }
+    .item { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; }
+    .item button { padding: 6px 12px; background: #e74c3c; border: none; border-radius: 6px; color: #fff; cursor: pointer; }
+    .item button:disabled { background: #555; cursor: not-allowed; }
+    #money { font-size: 1.4rem; margin-bottom: 20px; }
+    #log { margin-top: 20px; color: #f1c40f; min-height: 30px; }
+    a { display: block; margin-top: 30px; color: #74b9ff; }
+  </style>
+</head>
+<body>
+
+  <h1>🔫 Black Market</h1>
+  <div id="money">Money: $0</div>
+
+  <!-- Weapons -->
+  <div class="section">
+    <h2>Weapons</h2>
+    <div class="item">
+      <span>Knife ($5,000)</span>
+      <button id="buyKnife">Buy</button>
+    </div>
+    <div class="item">
+      <span>AK-47 ($15,000)</span>
+      <button id="buyAK">Buy</button>
+    </div>
+  </div>
+
+  <!-- Cars for Drive-By -->
+  <div class="section">
+    <h2>Drive-By Cars</h2>
+    <div class="item">
+      <span>Dodge Charger ($40,000)</span>
+      <button id="buyCharger">Buy</button>
+    </div>
+    <div class="item">
+      <span>VW Jetta ($25,000)</span>
+      <button id="buyJetta">Buy</button>
+    </div>
+  </div>
+
+  <!-- Trucks for Drug Runs -->
+  <div class="section">
+    <h2>Drug Trucks</h2>
+    <div class="item">
+      <span>Small Truck ($20,000)</span>
+      <button id="buyTruckSmall">Buy</button>
+    </div>
+    <div class="item">
+      <span>Medium Truck ($50,000)</span>
+      <button id="buyTruckMed">Buy</button>
+    </div>
+    <div class="item">
+      <span>Large Truck ($100,000)</span>
+      <button id="buyTruckLarge">Buy</button>
+    </div>
+  </div>
+
+  <!-- Drug Ingredients -->
+  <div class="section">
+    <h2>Drug Ingredients</h2>
+    <div class="item">
+      <span>Cannabis Seeds ($2,000)</span>
+      <button id="buyCannabis">Buy</button>
+    </div>
+    <div class="item">
+      <span>Meth Chemicals ($5,000)</span>
+      <button id="buyMeth">Buy</button>
+    </div>
+    <div class="item">
+      <span>Xanax Tablets ($1,000)</span>
+      <button id="buyXanax">Buy</button>
+    </div>
+    <div class="item">
+      <span>Ecstasy Powder ($1,500)</span>
+      <button id="buyEcstasy">Buy</button>
+    </div>
+  </div>
+
+  <div id="log"></div>
+  <a href="index.html">⬅ Back to Home</a>
+
+  <script>
+    // Load money and inventory
+    let money = parseFloat(localStorage.getItem('money'))||100000;
+    const inv = {
+      knife: localStorage.getItem('knife')==='true',
+      ak:    localStorage.getItem('ak')==='true',
+      charger:localStorage.getItem('charger')==='true',
+      jetta: localStorage.getItem('jetta')==='true',
+      truckSmall: localStorage.getItem('truckSmall')==='true',
+      truckMed:   localStorage.getItem('truckMed')==='true',
+      truckLarge: localStorage.getItem('truckLarge')==='true',
+      cannabis: parseInt(localStorage.getItem('cannabis'))||0,
+      meth:     parseInt(localStorage.getItem('meth'))||0,
+      xanax:    parseInt(localStorage.getItem('xanax'))||0,
+      ecstasy:  parseInt(localStorage.getItem('ecstasy'))||0
+    };
+
+    const moneyEl = document.getElementById('money'),
+          logEl   = document.getElementById('log');
+
+    function updateMoney(){
+      moneyEl.innerText = `Money: $${money.toLocaleString()}`;
+      localStorage.setItem('money', money);
+    }
+    function log(msg){
+      logEl.innerText = msg;
+      setTimeout(()=>{ if(logEl.innerText===msg) logEl.innerText=''; },4000);
+    }
+
+    function purchase(key, cost, count=1){
+      if(money < cost) return log('Not enough money.');
+      if(count===1 && inv[key]===true) return log('Already purchased.');
+      money -= cost;
+      updateMoney();
+      if(count===1) inv[key] = true;
+      else inv[key] += count;
+      localStorage.setItem(key, count===1?'true':inv[key]);
+      log(`Purchased ${count===1?key:key+' x'+count}!`);
+      updateButtons();
+    }
+
+    // Buttons
+    document.getElementById('buyKnife').onclick      = ()=>purchase('knife',5000);
+    document.getElementById('buyAK').onclick         = ()=>purchase('ak',15000);
+    document.getElementById('buyCharger').onclick    = ()=>purchase('charger',40000);
+    document.getElementById('buyJetta').onclick      = ()=>purchase('jetta',25000);
+    document.getElementById('buyTruckSmall').onclick = ()=>purchase('truckSmall',20000);
+    document.getElementById('buyTruckMed').onclick   = ()=>purchase('truckMed',50000);
+    document.getElementById('buyTruckLarge').onclick = ()=>purchase('truckLarge',100000);
+    document.getElementById('buyCannabis').onclick   = ()=>purchase('cannabis',2000,1);
+    document.getElementById('buyMeth').onclick       = ()=>purchase('meth',5000,1);
+    document.getElementById('buyXanax').onclick      = ()=>purchase('xanax',1000,1);
+    document.getElementById('buyEcstasy').onclick    = ()=>purchase('ecstasy',1500,1);
+
+    function updateButtons(){
+      // disable single-purchase items if owned
+      ['knife','ak','charger','jetta','truckSmall','truckMed','truckLarge']
+      .forEach(k=>{
+        document.getElementById('buy'+k.charAt(0).toUpperCase()+k.slice(1))
+          .disabled = inv[k];
+      });
+      updateMoney();
+    }
+
+    // init
+    updateButtons();
+    updateMoney();
+  </script>
+</body>
+</html>
