@@ -9,6 +9,9 @@
     h1 { margin-bottom: 20px; }
     .coin { background: #222; margin: 20px auto; max-width: 500px; padding: 20px; border-radius: 10px; }
     .price { font-size: 1.3rem; margin: 10px 0; }
+    .change { font-size: 0.9rem; }
+    .green { color: #00ff88; }
+    .red { color: #ff4444; }
     input { width: 100px; padding: 5px; border-radius: 5px; border: none; text-align: center; }
     button { margin: 5px; padding: 8px 20px; background: #3498db; border: none; border-radius: 5px; cursor: pointer; }
     #balance { font-size: 1.4rem; margin-bottom: 15px; }
@@ -22,7 +25,7 @@
 
   <div class="coin">
     <h2>Bitcoin (BTC)</h2>
-    <div class="price" id="btcPrice">$0</div>
+    <div class="price" id="btcPrice">$0 <span id="btcChange" class="change"></span></div>
     <input type="number" id="btcAmount" min="0" step="0.0001" />
     <br/>
     <button onclick="trade('btc', true)">Buy BTC</button>
@@ -32,7 +35,7 @@
 
   <div class="coin">
     <h2>Dogecoin (DOGE)</h2>
-    <div class="price" id="dogePrice">$0</div>
+    <div class="price" id="dogePrice">$0 <span id="dogeChange" class="change"></span></div>
     <input type="number" id="dogeAmount" min="0" step="0.0001" />
     <br/>
     <button onclick="trade('doge', true)">Buy DOGE</button>
@@ -42,7 +45,7 @@
 
   <div class="coin">
     <h2>$RUG (Fake Coin)</h2>
-    <div class="price" id="rugPrice">$0</div>
+    <div class="price" id="rugPrice">$0 <span id="rugChange" class="change"></span></div>
     <input type="number" id="rugAmount" min="0" step="0.0001" />
     <br/>
     <button onclick="trade('rug', true)">Buy $RUG</button>
@@ -61,23 +64,36 @@
       rug: parseFloat(localStorage.getItem('rugHoldings')) || 0,
     };
 
-    let savedRug = parseFloat(localStorage.getItem('rugPrice'));
     let prices = {
       btc: 30000,
       doge: 0.08,
-      rug: isNaN(savedRug) ? 1 : savedRug
+      rug: parseFloat(localStorage.getItem('rugPrice')) || 1
     };
 
+    const previousPrices = { ...prices };
     const RUG_MAX = 1000000;
 
     function updateDisplay() {
       document.getElementById('balance').innerText = `Balance: $${money.toFixed(2)}`;
-      document.getElementById('btcPrice').innerText = `$${prices.btc.toFixed(2)}`;
-      document.getElementById('dogePrice').innerText = `$${prices.doge.toFixed(4)}`;
-      document.getElementById('rugPrice').innerText = `$${prices.rug.toFixed(4)}`;
+
+      updateCoinDisplay('btc', 2);
+      updateCoinDisplay('doge', 4);
+      updateCoinDisplay('rug', 4);
+
       document.getElementById('btcHoldings').innerText = `Holdings: ${holdings.btc.toFixed(6)} BTC`;
       document.getElementById('dogeHoldings').innerText = `Holdings: ${holdings.doge.toFixed(6)} DOGE`;
       document.getElementById('rugHoldings').innerText = `Holdings: ${holdings.rug.toFixed(6)} $RUG`;
+    }
+
+    function updateCoinDisplay(coin, decimals) {
+      const priceEl = document.getElementById(`${coin}Price`);
+      const changeEl = document.getElementById(`${coin}Change`);
+      const change = ((prices[coin] - previousPrices[coin]) / previousPrices[coin]) * 100;
+
+      changeEl.innerText = `${change >= 0 ? '📈' : '📉'} ${change.toFixed(2)}%`;
+      changeEl.className = 'change ' + (change >= 0 ? 'green' : 'red');
+
+      priceEl.childNodes[0].textContent = `$${prices[coin].toFixed(decimals)} `;
     }
 
     function saveAll() {
@@ -115,22 +131,25 @@
     }
 
     function updatePrices() {
-      // BTC: stable
-      prices.btc *= (1 + (Math.random() - 0.5) * 0.01);
+      // Store old prices
+      previousPrices.btc = prices.btc;
+      previousPrices.doge = prices.doge;
+      previousPrices.rug = prices.rug;
 
-      // DOGE: more risky
-      prices.doge *= (1 + (Math.random() - 0.5) * 0.1);
+      // Bitcoin: small stable
+      prices.btc *= 1 + (Math.random() - 0.5) * 0.01;
 
-      // $RUG: crazy random
+      // Doge: riskier
+      prices.doge *= 1 + (Math.random() - 0.5) * 0.15;
+
+      // Rug: pump or rugpull randomly
       let chance = Math.random();
       if (chance < 0.05) {
-        // rugpull
         prices.rug *= 0.01;
         show("💥 $RUG was rugpulled!");
       } else {
         prices.rug *= 1 + Math.random() * 0.5;
       }
-
       prices.rug = Math.min(prices.rug, RUG_MAX);
 
       updateDisplay();
