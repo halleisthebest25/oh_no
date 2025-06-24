@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Shop - Gamble to Win!</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    color: white;
+    padding: 20px;
+    text-align: center;
+  }
+  h1 {
+    margin-bottom: 20px;
+  }
+  #moneyDisplay {
+    font-size: 1.4rem;
+    margin-bottom: 30px;
+  }
+  .items {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+  }
+  .item {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 15px;
+    width: 220px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.7);
+  }
+  .item img {
+    width: 100%;
+    height: 140px;
+    object-fit: contain;
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+  .item-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+  .item-price {
+    font-size: 1rem;
+    margin-bottom: 12px;
+  }
+  button {
+    background-color: #e67e22;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #d35400;
+  }
+  #output {
+    margin-top: 20px;
+    min-height: 30px;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+  <h1>Luxury Shop</h1>
+  <div id="moneyDisplay">Money: $0</div>
+
+  <div class="items" id="itemsContainer"></div>
+
+  <div id="output"></div>
+
+  <script>
+    let money = parseFloat(localStorage.getItem('money')) || 10000;
+
+    const items = [
+      {
+        name: 'Rolex Submariner',
+        price: 15000,
+        img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Rolex_Submariner_116610LV_-_2012_-_Green_Bezel_%26_Dial_%2813710481125%29.jpg/800px-Rolex_Submariner_116610LV_-_2012_-_Green_Bezel_%26_Dial_%2813710481125%29.jpg'
+      },
+      {
+        name: 'Richard Mille',
+        price: 1200000,
+        img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Richard_Mille_RM_011_Felipe_Massa_%28side_view%29.jpg/800px-Richard_Mille_RM_011_Felipe_Massa_%28side_view%29.jpg'
+      },
+      {
+        name: 'Porsche 911 GT3',
+        price: 160000,
+        img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Porsche_911_GT3_MK2_IMG_2244.jpg/800px-Porsche_911_GT3_MK2_IMG_2244.jpg'
+      },
+      {
+        name: 'Bentley Flying Spur',
+        price: 200000,
+        img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/2018_Bentley_Flying_Spur_6.0_Front.jpg/800px-2018_Bentley_Flying_Spur_6.0_Front.jpg'
+      },
+      {
+        name: 'Lamborghini Revuelto',
+        price: 450000,
+        img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Lamborghini_Revuelto%2C_Genf_2023%2C_1Y7A0707.jpg/800px-Lamborghini_Revuelto%2C_Genf_2023%2C_1Y7A0707.jpg'
+      },
+      {
+        name: 'Rolls-Royce Cullinan',
+        price: 350000,
+        img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/2020_Rolls-Royce_Cullinan_IMG_0215.jpg/800px-2020_Rolls-Royce_Cullinan_IMG_0215.jpg'
+      },
+    ];
+
+    const itemsContainer = document.getElementById('itemsContainer');
+    const moneyDisplay = document.getElementById('moneyDisplay');
+    const output = document.getElementById('output');
+
+    function updateMoney() {
+      moneyDisplay.innerText = `Money: $${money.toFixed(2)}`;
+      localStorage.setItem('money', money.toFixed(2));
+    }
+
+    function showOutput(msg, color = 'white') {
+      output.innerText = msg;
+      output.style.color = color;
+    }
+
+    function buyItem(index) {
+      const item = items[index];
+      if (money >= item.price) {
+        money -= item.price;
+        updateMoney();
+        showOutput(`You bought ${item.name} for $${item.price.toLocaleString()}`, '#2ecc71');
+      } else {
+        showOutput('Not enough money to buy this item.', '#e74c3c');
+      }
+    }
+
+    function createItems() {
+      items.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.classList.add('item');
+
+        div.innerHTML = `
+          <img src="${item.img}" alt="${item.name}" />
+          <div class="item-name">${item.name}</div>
+          <div class="item-price">$${item.price.toLocaleString()}</div>
+          <button onclick="buyItem(${idx})">Buy</button>
+        `;
+
+        itemsContainer.appendChild(div);
+      });
+    }
+
+    createItems();
+    updateMoney();
+  </script>
+</body>
+</html>
