@@ -79,39 +79,38 @@
 
   <script>
     let money = parseFloat(localStorage.getItem('money')) || 10000;
-
-    const items = [
-      {
-        name: 'Rolex Submariner',
-        price: 15000,
-        img: '<img src="https://www.chronodigmwatch.co.kr/data/item/m126613ln-0002/m126613ln0002_drpuprightbbawithshadow.png" alt="롤렉스 서브마리너 데이트, M126613LN-0002, 옐로우 롤레조 – 오이스터스틸과 옐로우 골드의 조합 | 크로노다임"/>'
-      },
-      {
-        name: 'Richard Mille',
-        price: 100000,
-        img: '<img src="https://image.goxip.com/cKL6FLPuuBV8ubGYEpG5f-xfhUU=/fit-in/500x500/filters:format(jpg):quality(80):fill(white)/http:%2F%2Fres.cloudinary.com%2Fdjtnxo4ow%2Fimage%2Fprivate%2Fs--GnZps0Fo--%2Fv1573486608%2Fimage1%2Fe12iqmex0yqkvnsqbbxa.jpg%3Fdate=2019-11-11" alt="Richard Mille Richard Mille Chronograph Automatic Mens Watch RM 11-03 RG"/>'
-      },
-      {
-        name: 'Porsche 911 GT3',
-        price: 250000,
-        img: '<img src="https://images-porsche.imgix.net/-/media/5CCEFD7BFDEC44B0BFEDD8FC51856632_A716CD4802D241E3BE787EF14B813101_911-gt3-rs-side?w=2560&amp;h=699&amp;q=45&amp;crop=faces%2Centropy%2Cedges&amp;auto=format" alt="Porsche 911 GT3 | Porsche International"/>'
-      },
-      {
-        name: 'Bentley Flying Spur',
-        price: 300000,
-        img: '<img src="https://www.topgear.com/sites/default/files/2025/03/1-Bentley-Flying-Spur-review-2025-UK.jpg" alt="Bentley Flying Spur Review 2025 | Top Gear"/>'
-      },
-      {
-        name: 'Lamborghini Revuelto',
-        price: 600000,
-        img: '<img src="https://www.lamborghini.com/sites/it-en/files/DAM/lamborghini/facelift_2019/model_detail/revuelto/og.jpg" alt="Revuelto | Lamborghini.com"/>'
-      },
-      {
-        name: 'Rolls-Royce Cullinan',
-        price: 400000,
-        img: '<img src="https://hips.hearstapps.com/hmg-prod/images/2025-rolls-royce-cullinan-black-badge-107-663a56d913506.jpg?crop=0.834xw:0.740xh;0.0799xw,0.178xh&amp;resize=1200:*" alt="2025 Rolls-Royce Cullinan Review, Pricing, and Specs"/>'
-      },
-    ];
+const items = [
+  {
+    name: 'Rolex Submariner',
+    price: 15000,
+    img: 'https://www.chronodigmwatch.co.kr/data/item/m126613ln-0002/m126613ln0002_drpuprightbbawithshadow.png'
+  },
+  {
+    name: 'Richard Mille',
+    price: 100000,
+    img: 'https://image.goxip.com/cKL6FLPuuBV8ubGYEpG5f-xfhUU=/fit-in/500x500/filters:format(jpg):quality(80):fill(white)/http:%2F%2Fres.cloudinary.com%2Fdjtnxo4ow%2Fimage%2Fprivate%2Fs--GnZps0Fo--%2Fv1573486608%2Fimage1%2Fe12iqmex0yqkvnsqbbxa.jpg%3Fdate=2019-11-11'
+  },
+  {
+    name: 'Porsche 911 GT3',
+    price: 250000,
+    img: 'https://images-porsche.imgix.net/-/media/5CCEFD7BFDEC44B0BFEDD8FC51856632_A716CD4802D241E3BE787EF14B813101_911-gt3-rs-side?w=2560&h=699&q=45&crop=faces,entropy,edges&auto=format'
+  },
+  {
+    name: 'Bentley Flying Spur',
+    price: 300000,
+    img: 'https://www.topgear.com/sites/default/files/2025/03/1-Bentley-Flying-Spur-review-2025-UK.jpg'
+  },
+  {
+    name: 'Lamborghini Revuelto',
+    price: 600000,
+    img: 'https://www.lamborghini.com/sites/it-en/files/DAM/lamborghini/facelift_2019/model_detail/revuelto/og.jpg'
+  },
+  {
+    name: 'Rolls-Royce Cullinan',
+    price: 400000,
+    img: 'https://hips.hearstapps.com/hmg-prod/images/2025-rolls-royce-cullinan-black-badge-107-663a56d913506.jpg?crop=0.834xw:0.740xh;0.0799xw,0.178xh&resize=1200:*'
+  },
+];
 
     const itemsContainer = document.getElementById('itemsContainer');
     const moneyDisplay = document.getElementById('moneyDisplay');
