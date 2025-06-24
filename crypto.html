@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Gamble to Win! - Crypto Trading</title>
+  <title>Crypto Trading</title>
   <style>
-    body { font-family: Arial; background: #222; color: #fff; text-align: center; padding: 20px; }
+    body { font-family: Arial; background: #111; color: #fff; text-align: center; padding: 20px; }
     h1 { margin-bottom: 20px; }
-    .coin { background: #333; margin: 20px auto; max-width: 500px; padding: 20px; border-radius: 10px; }
+    .coin { background: #222; margin: 20px auto; max-width: 500px; padding: 20px; border-radius: 10px; }
     .price { font-size: 1.3rem; margin: 10px 0; }
     input { width: 100px; padding: 5px; border-radius: 5px; border: none; text-align: center; }
     button { margin: 5px; padding: 8px 20px; background: #3498db; border: none; border-radius: 5px; cursor: pointer; }
@@ -17,7 +17,7 @@
   </style>
 </head>
 <body>
-  <h1>💰 Gamble to Win! - Crypto Trading</h1>
+  <h1>💰 Crypto Trading</h1>
   <div id="balance">Balance: $0</div>
 
   <div class="coin">
@@ -60,10 +60,16 @@
       doge: parseFloat(localStorage.getItem('dogeHoldings')) || 0,
       rug: parseFloat(localStorage.getItem('rugHoldings')) || 0,
     };
-    let prices = { btc: 0, doge: 0, rug: 1 };
+
+    let savedRug = parseFloat(localStorage.getItem('rugPrice'));
+    let prices = {
+      btc: 0,
+      doge: 0,
+      rug: isNaN(savedRug) ? 1 : savedRug
+    };
 
     const rugOriginal = 1;
-    const RUG_MAX = 1_000_000;
+    const RUG_MAX = 1000000;
     let rugPump, rugRecover;
     let userBoughtRug = false;
 
@@ -72,6 +78,7 @@
       document.getElementById('btcHoldings').textContent = `Holdings: ${holdings.btc.toFixed(6)} BTC`;
       document.getElementById('dogeHoldings').textContent = `Holdings: ${holdings.doge.toFixed(6)} DOGE`;
       document.getElementById('rugHoldings').textContent = `Holdings: ${holdings.rug.toFixed(6)} $RUG`;
+      document.getElementById('rugPrice').textContent = `$${prices.rug.toFixed(4)}`;
     };
 
     const saveAll = () => {
@@ -79,6 +86,7 @@
       localStorage.setItem('btcHoldings', holdings.btc);
       localStorage.setItem('dogeHoldings', holdings.doge);
       localStorage.setItem('rugHoldings', holdings.rug);
+      localStorage.setItem('rugPrice', prices.rug);
     };
 
     function show(msg) {
@@ -97,7 +105,7 @@
         show(`Bought ${amt.toFixed(4)} ${coin.toUpperCase()} for $${total.toFixed(2)}`);
         if (coin === 'rug') {
           userBoughtRug = true;
-          resetRugPumpTimer(); 
+          resetRugTimer();
         }
       } else {
         if (amt > holdings[coin]) return show('Not enough holdings.');
@@ -119,40 +127,41 @@
       }
     }
 
-    function startRugPumpAuto() {
+    function startRugPump() {
       clearInterval(rugPump);
       clearInterval(rugRecover);
-      prices.rug = rugOriginal;
-      document.getElementById('rugPrice').textContent = `$${prices.rug.toFixed(4)}`;
-
       rugPump = setInterval(() => {
-        if (prices.rug < RUG_MAX) prices.rug *= 1 + Math.random() * 0.1; // up to +10% each pump tick
-        prices.rug = Math.min(prices.rug, RUG_MAX);
-        document.getElementById('rugPrice').textContent = `$${prices.rug.toFixed(4)}`;
+        if (prices.rug < RUG_MAX) {
+          prices.rug *= 1 + Math.random() * 0.1;
+          prices.rug = Math.min(prices.rug, RUG_MAX);
+          localStorage.setItem('rugPrice', prices.rug);
+          document.getElementById('rugPrice').textContent = `$${prices.rug.toFixed(4)}`;
+        }
       }, 200);
-
-      scheduleRugPullTimer();
+      scheduleRugPull();
     }
 
-    let rugPullTimer;
-    function scheduleRugPullTimer() {
-      clearTimeout(rugPullTimer);
-      const delay = userBoughtRug ? 30000 : 0;
-      rugPullTimer = setTimeout(rugPull, delay);
+    let rugPullTimeout;
+    function scheduleRugPull() {
+      clearTimeout(rugPullTimeout);
+      if (userBoughtRug) {
+        rugPullTimeout = setTimeout(rugPull, 30000);
+      }
     }
 
-    function resetRugPumpTimer() {
+    function resetRugTimer() {
       userBoughtRug = true;
-      scheduleRugPullTimer();
+      scheduleRugPull();
     }
 
     function rugPull() {
       clearInterval(rugPump);
-      rugPullTimer = null;
       prices.rug = rugOriginal * 0.01;
+      localStorage.setItem('rugPrice', prices.rug);
       document.getElementById('rugPrice').textContent = `$${prices.rug.toFixed(4)}`;
       rugRecover = setInterval(() => {
         prices.rug += Math.random() * 0.5;
+        localStorage.setItem('rugPrice', prices.rug);
         document.getElementById('rugPrice').textContent = `$${prices.rug.toFixed(4)}`;
       }, 5000);
     }
@@ -165,7 +174,7 @@
       fetchPrice('dogecoin', 'dogePrice', 4);
     }, 5000);
 
-    startRugPumpAuto();
+    startRugPump();
   </script>
 </body>
 </html>
