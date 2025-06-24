@@ -160,7 +160,7 @@
       document.getElementById('rugHoldings').textContent = `Holdings: ${holdings.rug.toFixed(6)} $RUG`;
     }
 
-    // Fetch live BTC price every 10 seconds from CoinGecko
+    // Fetch live BTC price every 5 seconds from CoinGecko
     async function fetchBTCPrice() {
       try {
         const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
@@ -172,7 +172,7 @@
       }
     }
 
-    // Fetch live DOGE price every 10 seconds using CoinGecko API
+    // Fetch live DOGE price every 5 seconds using CoinGecko API
     async function fetchDOGEPrice() {
       try {
         const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=dogecoin&vs_currencies=usd');
@@ -198,25 +198,25 @@
 
       rugPrice = rugOriginalPrice;
       rugPriceEl.textContent = `$${rugPrice.toFixed(4)}`;
-      let pumpDuration = 30000; // 30 sec
+      let pumpDuration = 15000; // 15 sec (fast pump)
       let startTime = Date.now();
 
       function pumpStep() {
         const elapsed = Date.now() - startTime;
         if (elapsed < pumpDuration) {
-          rugPrice += (Math.random() * 0.5 + 0.1);
+          rugPrice += (Math.random() * 2 + 1); // pump faster
           rugPriceEl.textContent = `$${rugPrice.toFixed(4)}`;
-          setTimeout(pumpStep, 500);
+          setTimeout(pumpStep, 200);
         } else {
-          // Rugpull: drop to 1% of original price
+          // Rugpull: drop to 1% of original price instantly
           rugPrice = rugOriginalPrice * 0.01;
           rugPriceEl.textContent = `$${rugPrice.toFixed(4)}`;
 
-          // After rugpull, start risky price fluctuations
+          // After rugpull, start risky price fluctuations every 0.5 sec
           rugRiskInterval = setInterval(() => {
             rugPrice = rugOriginalPrice * (0.01 + Math.random() * 0.1);
             rugPriceEl.textContent = `$${rugPrice.toFixed(4)}`;
-          }, 3000);
+          }, 500);
         }
       }
       pumpStep();
@@ -290,8 +290,10 @@
     updateDisplay();
     fetchBTCPrice();
     fetchDOGEPrice();
-    setInterval(fetchBTCPrice, 10000);
-    setInterval(fetchDOGEPrice, 10000);
+
+    // Update BTC and DOGE every 5 seconds
+    setInterval(fetchBTCPrice, 5000);
+    setInterval(fetchDOGEPrice, 5000);
 
   </script>
 </body>
