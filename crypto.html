@@ -1,180 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Crypto Trading</title>
-  <style>
-    body { font-family: Arial; background: #111; color: #fff; text-align: center; padding: 20px; }
-    h1 { margin-bottom: 20px; }
-    .coin { background: #222; margin: 20px auto; max-width: 500px; padding: 20px; border-radius: 10px; }
-    .price { font-size: 1.3rem; margin: 10px 0; }
-    input { width: 100px; padding: 5px; border-radius: 5px; border: none; text-align: center; }
-    button { margin: 5px; padding: 8px 20px; background: #3498db; border: none; border-radius: 5px; cursor: pointer; }
-    #balance { font-size: 1.4rem; margin-bottom: 15px; }
-    #messages { margin-top: 15px; color: yellow; font-weight: bold; }
-    a { color: #74b9ff; display: block; margin-top: 20px; }
-  </style>
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Crypto Trading</title>
+<style>
+ body{font-family:Arial;background:#111;color:#fff;text-align:center;padding:20px}
+ h1{margin-bottom:20px}
+ .coin{background:#222;margin:20px auto;max-width:500px;padding:20px;border-radius:10px}
+ .price{font-size:1.3rem;margin:10px 0}
+ input{width:100px;padding:5px;border-radius:5px;border:none;text-align:center}
+ button{margin:5px;padding:8px 20px;background:#3498db;border:none;border-radius:5px;cursor:pointer}
+ #balance{font-size:1.4rem;margin-bottom:15px}
+ #messages{margin-top:15px;color:yellow;font-weight:bold}
+ a{color:#74b9ff;display:block;margin-top:20px}
+</style>
 </head>
 <body>
-  <h1>💰 Crypto Trading</h1>
-  <div id="balance">Balance: $0</div>
+<h1>💰 Crypto Trading</h1>
+<div id="balance">Balance: $0</div>
 
-  <div class="coin">
-    <h2>Bitcoin (BTC)</h2>
-    <div class="price" id="btcPrice">$0</div>
-    <input type="number" id="btcAmount" min="0" step="0.0001" />
-    <br/>
-    <button onclick="trade('btc', true)">Buy BTC</button>
-    <button onclick="trade('btc', false)">Sell BTC</button>
-    <div class="holdings" id="btcHoldings">Holdings: 0 BTC</div>
-  </div>
+<div class="coin">
+  <h2>Bitcoin (BTC)</h2>
+  <div class="price" id="btcPrice">$0</div>
+  <input type="number" id="btcAmount" min="0" step="0.0001"/>
+  <br/>
+  <button onclick="trade('btc',true)">Buy BTC</button>
+  <button onclick="trade('btc',false)">Sell BTC</button>
+  <div class="holdings" id="btcHoldings">Holdings: 0 BTC</div>
+</div>
 
-  <div class="coin">
-    <h2>Dogecoin (DOGE)</h2>
-    <div class="price" id="dogePrice">$0</div>
-    <input type="number" id="dogeAmount" min="0" step="0.0001" />
-    <br/>
-    <button onclick="trade('doge', true)">Buy DOGE</button>
-    <button onclick="trade('doge', false)">Sell DOGE</button>
-    <div class="holdings" id="dogeHoldings">Holdings: 0 DOGE</div>
-  </div>
+<div class="coin">
+  <h2>Dogecoin (DOGE)</h2>
+  <div class="price" id="dogePrice">$0</div>
+  <input type="number" id="dogeAmount" min="0" step="0.0001"/>
+  <br/>
+  <button onclick="trade('doge',true)">Buy DOGE</button>
+  <button onclick="trade('doge',false)">Sell DOGE</button>
+  <div class="holdings" id="dogeHoldings">Holdings: 0 DOGE</div>
+</div>
 
-  <div class="coin">
-    <h2>$RUG</h2>
-    <div class="price" id="rugPrice">$1.0000</div>
-    <input type="number" id="rugAmount" min="0" step="0.0001" />
-    <br/>
-    <button onclick="trade('rug', true)">Buy $RUG</button>
-    <button onclick="trade('rug', false)">Sell $RUG</button>
-    <div class="holdings" id="rugHoldings">Holdings: 0 $RUG</div>
-  </div>
+<div class="coin">
+  <h2>$RUG (Fake Coin)</h2>
+  <div class="price" id="rugPrice">$1.0000</div>
+  <input type="number" id="rugAmount" min="0" step="0.0001"/>
+  <br/>
+  <button onclick="trade('rug',true)">Buy $RUG</button>
+  <button onclick="trade('rug',false)">Sell $RUG</button>
+  <div class="holdings" id="rugHoldings">Holdings: 0 $RUG</div>
+</div>
 
-  <div id="messages"></div>
-  <a href="index.html">⬅ Back to Home</a>
+<div id="messages"></div>
+<a href="index.html">⬅ Back to Home</a>
 
-  <script>
-    let money = parseFloat(localStorage.getItem('money')) || 1000;
-    let holdings = {
-      btc: parseFloat(localStorage.getItem('btcHoldings')) || 0,
-      doge: parseFloat(localStorage.getItem('dogeHoldings')) || 0,
-      rug: parseFloat(localStorage.getItem('rugHoldings')) || 0,
-    };
+<script>
+let money = parseFloat(localStorage.getItem('money')) || 1000;
+let holdings = {
+  btc: parseFloat(localStorage.getItem('btcHoldings')) || 0,
+  doge: parseFloat(localStorage.getItem('dogeHoldings')) || 0,
+  rug: parseFloat(localStorage.getItem('rugHoldings')) || 0,
+};
 
-    let savedRug = parseFloat(localStorage.getItem('rugPrice'));
-    let prices = {
-      btc: 0,
-      doge: 0,
-      rug: isNaN(savedRug) ? 1 : savedRug
-    };
+let savedRug = parseFloat(localStorage.getItem('rugPrice'));
+let prices = {
+  btc: 0,
+  doge: 0,
+  rug: isNaN(savedRug) ? 1 : savedRug
+};
 
-    const rugOriginal = 1;
-    const RUG_MAX = 1000000;
-    let rugPump, rugRecover;
-    let userBoughtRug = false;
+const rugOriginal = 1, RUG_MAX = 1000000;
+let rugPump, rugRecover;
+let userBoughtRug = false;
 
-    const updateDisplay = () => {
-      document.getElementById('balance').textContent = `Balance: $${money.toFixed(2)}`;
-      document.getElementById('btcHoldings').textContent = `Holdings: ${holdings.btc.toFixed(6)} BTC`;
-      document.getElementById('dogeHoldings').textContent = `Holdings: ${holdings.doge.toFixed(6)} DOGE`;
-      document.getElementById('rugHoldings').textContent = `Holdings: ${holdings.rug.toFixed(6)} $RUG`;
-      document.getElementById('rugPrice').textContent = `$${prices.rug.toFixed(4)}`;
-    };
+const updateDisplay = () => {
+  document.getElementById('balance').textContent = `Balance: $${money.toFixed(2)}`;
+  document.getElementById('btcHoldings').textContent = `Holdings: ${holdings.btc.toFixed(6)} BTC`;
+  document.getElementById('dogeHoldings').textContent = `Holdings: ${holdings.doge.toFixed(6)} DOGE`;
+  document.getElementById('rugHoldings').textContent = `Holdings: ${holdings.rug.toFixed(6)} $RUG`;
+  document.getElementById('rugPrice').textContent = `$${prices.rug.toFixed(4)}`;
+};
 
-    const saveAll = () => {
-      localStorage.setItem('money', money.toFixed(2));
-      localStorage.setItem('btcHoldings', holdings.btc);
-      localStorage.setItem('dogeHoldings', holdings.doge);
-      localStorage.setItem('rugHoldings', holdings.rug);
-      localStorage.setItem('rugPrice', prices.rug);
-    };
+function saveAll() {
+  localStorage.setItem('money', money.toFixed(2));
+  localStorage.setItem('btcHoldings', holdings.btc);
+  localStorage.setItem('dogeHoldings', holdings.doge);
+  localStorage.setItem('rugHoldings', holdings.rug);
+  localStorage.setItem('rugPrice', prices.rug);
+}
 
-    function show(msg) {
-      document.getElementById('messages').textContent = msg;
-    }
+function show(msg) {
+  document.getElementById('messages').textContent = msg;
+}
 
-    function trade(coin, buy) {
-      const amt = parseFloat(document.getElementById(coin + 'Amount').value);
-      if (!(amt > 0)) return show('Invalid amount.');
-      const price = coin === 'rug' ? prices.rug : prices[coin];
-      const total = amt * price;
-      if (buy) {
-        if (money < total) return show('Not enough money.');
-        money -= total;
-        holdings[coin] += amt;
-        show(`Bought ${amt.toFixed(4)} ${coin.toUpperCase()} for $${total.toFixed(2)}`);
-        if (coin === 'rug') {
-          userBoughtRug = true;
-          resetRugTimer();
-        }
-      } else {
-        if (amt > holdings[coin]) return show('Not enough holdings.');
-        money += total;
-        holdings[coin] -= amt;
-        show(`Sold ${amt.toFixed(4)} ${coin.toUpperCase()} for $${total.toFixed(2)}`);
-      }
-      updateDisplay(); saveAll();
-    }
+function trade(coin, buy) {
+  const amt = parseFloat(document.getElementById(coin + 'Amount').value);
+  if (!(amt > 0)) return show('Invalid amount.');
+  const price = coin === 'rug' ? prices.rug : prices[coin];
+  const total = amt * price;
+  if (buy) {
+    if (money < total) return show('Not enough money.');
+    money -= total; holdings[coin] += amt;
+    show(`Bought ${amt.toFixed(4)} ${coin.toUpperCase()} for $${total.toFixed(2)}`);
+    if (coin === 'rug') { userBoughtRug = true; scheduleRugPull(); }
+  } else {
+    if (amt > holdings[coin]) return show('Not enough holdings.');
+    money += total; holdings[coin] -= amt;
+    show(`Sold ${amt.toFixed(4)} ${coin.toUpperCase()} for $${total.toFixed(2)}`);
+  }
+  updateDisplay(); saveAll();
+}
 
-    async function fetchPrice(id, el, dec) {
-      try {
-        const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`);
-        const data = await res.json();
-        prices[id] = data[id].usd;
-        document.getElementById(el).textContent = `$${prices[id].toFixed(dec)}`;
-      } catch {
-        document.getElementById(el).textContent = 'Error';
-      }
-    }
+async function fetchPrice(id, el, dec) {
+  try {
+    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`);
+    const data = await res.json();
+    prices[id] = data[id].usd;
+    document.getElementById(el).textContent = `$${prices[id].toFixed(dec)}`;
+  } catch {
+    document.getElementById(el).textContent = 'Error';
+  }
+}
 
-    function startRugPump() {
-      clearInterval(rugPump);
-      clearInterval(rugRecover);
-      rugPump = setInterval(() => {
-        if (prices.rug < RUG_MAX) {
-          prices.rug *= 1 + Math.random() * 0.1;
-          prices.rug = Math.min(prices.rug, RUG_MAX);
-          localStorage.setItem('rugPrice', prices.rug);
-          document.getElementById('rugPrice').textContent = `$${prices.rug.toFixed(4)}`;
-        }
-      }, 200);
-      scheduleRugPull();
-    }
-
-    let rugPullTimeout;
-    function scheduleRugPull() {
-      clearTimeout(rugPullTimeout);
-      if (userBoughtRug) {
-        rugPullTimeout = setTimeout(rugPull, 30000);
-      }
-    }
-
-    function resetRugTimer() {
-      userBoughtRug = true;
-      scheduleRugPull();
-    }
-
-    function rugPull() {
-      clearInterval(rugPump);
-      prices.rug = rugOriginal * 0.01;
+function startRugPump() {
+  clearInterval(rugPump); clearInterval(rugRecover);
+  rugPump = setInterval(() => {
+    if (prices.rug < RUG_MAX) {
+      prices.rug *= 1 + Math.random()*0.1;
+      prices.rug = Math.min(prices.rug, RUG_MAX);
       localStorage.setItem('rugPrice', prices.rug);
       document.getElementById('rugPrice').textContent = `$${prices.rug.toFixed(4)}`;
-      rugRecover = setInterval(() => {
-        prices.rug += Math.random() * 0.5;
-        localStorage.setItem('rugPrice', prices.rug);
-        document.getElementById('rugPrice').textContent = `$${prices.rug.toFixed(4)}`;
-      }, 5000);
     }
+  }, 200);
+  scheduleRugPull();
+}
 
-    updateDisplay();
-    fetchPrice('bitcoin', 'btcPrice', 2);
-    fetchPrice('dogecoin', 'dogePrice', 4);
-    setInterval(() => {
-      fetchPrice('bitcoin', 'btcPrice', 2);
-      fetchPrice('dogecoin', 'dogePrice', 4);
-    }, 5000);
+let rugPullTimeout;
+function scheduleRugPull() {
+  clearTimeout(rugPullTimeout);
+  if (userBoughtRug) {
+    rugPullTimeout = setTimeout(rugPull, 30000);
+  }
+}
 
-    startRugPump();
-  </script>
+function rugPull() {
+  clearInterval(rugPump);
+  prices.rug = rugOriginal * 0.01;
+  localStorage.setItem('rugPrice', prices.rug);
+  document.getElementById('rugPrice').textContent = `$${prices.rug.toFixed(4)}`;
+  rugRecover = setInterval(() => {
+    prices.rug += Math.random() * 0.5;
+    localStorage.setItem('rugPrice', prices.rug);
+    document.getElementById('rugPrice').textContent = `$${prices.rug.toFixed(4)}`;
+  }, 5000);
+}
+
+// Initialize
+updateDisplay();
+fetchPrice('bitcoin','btcPrice',2);
+fetchPrice('dogecoin','dogePrice',4);
+setInterval(()=>{
+  fetchPrice('bitcoin','btcPrice',2);
+  fetchPrice('dogecoin','dogePrice',4);
+},5000);
+
+startRugPump();
+</script>
 </body>
 </html>
