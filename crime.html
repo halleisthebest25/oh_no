@@ -29,7 +29,7 @@
     </label>
 
     <p>Ingredients: <span id="ingredientStock">0</span></p>
-    <button onclick="buyIngredient()">Buy Ingredient ($1000)</button>
+    <button onclick="buyIngredient()">Buy Ingredient ($100)</button>
 
     <p>Inventory: <span id="drugInventory">0</span> units</p>
     <p>Workers: <span id="workers">0</span></p>
@@ -97,8 +97,8 @@
     }
 
     function buyIngredient() {
-      if (money < 1000) return log('Not enough money.');
-      money -= 1000;
+      if (money < 100) return log('Not enough money.');
+      money -= 100;
       ingredients++;
       saveData();
       updateUI();
@@ -152,7 +152,7 @@
         if (secondsLeft <= 0) {
           clearInterval(interval);
           deliveryTimer.innerText = '';
-          const profit = amt * 100;
+          const profit = amt * 500;
           money += profit;
           saveData();
           updateUI();
