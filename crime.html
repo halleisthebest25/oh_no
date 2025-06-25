@@ -2,42 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Crime Spree</title>
+  <title>Crime - Drug Empire</title>
   <style>
-    body { font-family: Arial, sans-serif; background:#222; color:#fff; text-align:center; padding:20px }
+    body { font-family: Arial, sans-serif; background:#1b1b1b; color:white; padding:20px; text-align:center }
     h1 { margin-bottom:20px }
-    #moneyDisplay { font-size:1.4rem; margin-bottom:20px }
-    .section { background:rgba(255,255,255,0.1); padding:15px; margin:15px auto; border-radius:12px; max-width:600px }
-    .section h2 { margin-top:0 }
-    .section label, .section select, .section input, .section button { display:block; margin:8px auto; }
-    .section button { padding:8px 16px; border:none; border-radius:6px; background:#e74c3c; color:#fff; cursor:pointer }
-    .section button:disabled { background:#555; cursor:not-allowed }
-    #log { margin-top:20px; min-height:40px; color:#f1c40f }
-    a { display:block; margin-top:30px; color:#74b9ff }
+    .section { background:rgba(255,255,255,0.05); padding:20px; margin:15px auto; border-radius:10px; max-width:600px }
+    button, select, input[type="checkbox"] { margin:10px; padding:10px 15px; font-size:1rem }
+    #log { margin-top:20px; color:#f1c40f; min-height:30px }
+    .truck-cap { font-size:0.9rem; color:gray }
+    label { display:block; margin-top:10px }
   </style>
 </head>
 <body>
-  <h1>💀 Crime Spree</h1>
+  <h1>💊 Drug Empire</h1>
   <div id="moneyDisplay">Money: $0</div>
 
-  <!-- Casino Section -->
   <div class="section">
-    <h2>Illegal Casino</h2>
-    <label>Fairness (0=risky → high profit, 100=safe → low profit):
-      <input type="range" id="casinoFairness" min="0" max="100" value="50"/>
-      <span id="fairVal">50</span>%
-    </label>
-    <button id="startCasino">Start Casino ($50 k)</button>
-    <button id="retrieveCasino" disabled>Retrieve Profits</button>
-    <p>Police chance on retrieve: <span id="policeChance">50%</span></p>
-  </div>
-
-  <!-- Drug Section -->
-  <div class="section">
-    <h2>Drug Operation</h2>
-    <label>Workers: <span id="workerCount">0</span> (each produces 1/unit per 10s)</label>
-    <button id="hireWorker">Hire Worker ($10 k)</button>
-
+    <h2>Drug Production</h2>
     <label>Drug Type:
       <select id="drugType">
         <option value="cannabis">Cannabis</option>
@@ -46,224 +27,142 @@
         <option value="ecstasy">Ecstasy</option>
       </select>
     </label>
-    <p>Inventory: <span id="drugInventory">0</span> units</p>
-    <button id="produceDrugs" disabled>Produce Drugs</button>
 
-    <label>Use Truck:
-      <select id="truckType">
-        <option value="none">None</option>
-        <option value="truckSmall">Small Truck</option>
-        <option value="truckMed">Medium Truck</option>
-        <option value="truckLarge">Large Truck</option>
-      </select>
-    </label>
-    <button id="deliverDrugs" disabled>Deliver Drugs</button>
+    <p>Ingredients: <span id="ingredientStock">0</span></p>
+    <button onclick="buyIngredient()">Buy Ingredient ($1000)</button>
+
+    <p>Inventory: <span id="drugInventory">0</span> units</p>
+    <p>Workers: <span id="workers">0</span></p>
+    <button onclick="hireWorker()">Hire Worker ($10,000)</button>
+
+    <label><input type="checkbox" id="autoProduceToggle" /> Auto Produce</label>
+    <button id="produceBtn" onclick="produceDrugs()">Produce Drugs</button>
   </div>
 
-  <!-- Murder Section -->
   <div class="section">
-    <h2>Hitman Contract</h2>
-    <button id="getOffer">Get Offer</button>
-    <div id="offerArea"></div>
-
-    <label>Choose Tool:
-      <select id="murderTool" disabled>
-        <option value="knife">Knife</option>
-        <option value="gun">Gun</option>
-        <option value="driveby">Drive-by</option>
+    <h2>Deliver Drugs</h2>
+    <label>Truck:
+      <select id="truckSelect">
+        <option value="none">None</option>
+        <option value="truckSmall">Small Truck (Cap: 10)</option>
+        <option value="truckMed">Medium Truck (Cap: 25)</option>
+        <option value="truckLarge">Large Truck (Cap: 50)</option>
       </select>
     </label>
-    <button id="executeHit" disabled>Execute</button>
+    <button onclick="deliverDrugs()">Deliver</button>
+    <p id="deliveryTimer"></p>
   </div>
 
   <div id="log"></div>
-  <a href="index.html">⬅ Back to Home</a>
 
   <script>
-    // Load money
-    let money = parseFloat(localStorage.getItem('money'))||100000;
-
-    // Casino state
-    let casinoRunning = localStorage.getItem('casino_running')==='true';
-    let casinoProfits = parseFloat(localStorage.getItem('casino_profits'))||0;
-
-    // Drug state
-    let workers = parseInt(localStorage.getItem('drug_workers'))||0;
-    // inventory per drug type
+    let money = parseFloat(localStorage.getItem('money')) || 100000;
     const inv = {
-      cannabis: parseInt(localStorage.getItem('cannabis_inventory'))||0,
-      meth:     parseInt(localStorage.getItem('meth_inventory'))||0,
-      xanax:    parseInt(localStorage.getItem('xanax_inventory'))||0,
-      ecstasy:  parseInt(localStorage.getItem('ecstasy_inventory'))||0
+      cannabis: parseInt(localStorage.getItem('cannabis_inventory')) || 0,
+      meth: parseInt(localStorage.getItem('meth_inventory')) || 0,
+      xanax: parseInt(localStorage.getItem('xanax_inventory')) || 0,
+      ecstasy: parseInt(localStorage.getItem('ecstasy_inventory')) || 0
+    };
+    let ingredients = parseInt(localStorage.getItem('drug_ingredients')) || 0;
+    let workers = parseInt(localStorage.getItem('drug_workers')) || 0;
+    let autoProduce = false;
+
+    const updateUI = () => {
+      document.getElementById('moneyDisplay').innerText = `Money: $${money.toLocaleString()}`;
+      document.getElementById('ingredientStock').innerText = ingredients;
+      document.getElementById('workers').innerText = workers;
+      const type = document.getElementById('drugType').value;
+      document.getElementById('drugInventory').innerText = inv[type];
     };
 
-    // Truck ownership from blackmarket
-    const hasTruck = {
-      truckSmall: localStorage.getItem('truckSmall')==='true',
-      truckMed:   localStorage.getItem('truckMed')==='true',
-      truckLarge: localStorage.getItem('truckLarge')==='true'
+    const saveData = () => {
+      localStorage.setItem('money', money);
+      localStorage.setItem('drug_workers', workers);
+      localStorage.setItem('drug_ingredients', ingredients);
+      for (let k in inv) localStorage.setItem(`${k}_inventory`, inv[k]);
     };
 
-    // Murder contract
-    let currentOffer = null;
-
-    // UI elements
-    const moneyEl = document.getElementById('moneyDisplay'),
-          logEl   = document.getElementById('log');
-
-    function updateMoney(){
-      moneyEl.innerText = `Money: $${money.toLocaleString()}`;
-      localStorage.setItem('money', money.toFixed(2));
-    }
-    function log(msg){
+    function log(msg) {
+      const logEl = document.getElementById('log');
       logEl.innerText = msg;
-      setTimeout(()=>{ if(logEl.innerText===msg) logEl.innerText=''; },5000);
+      setTimeout(() => { if (logEl.innerText === msg) logEl.innerText = ''; }, 5000);
     }
 
-    // --- Casino ---
-    const fairness = document.getElementById('casinoFairness'),
-          fairVal = document.getElementById('fairVal'),
-          policeCh= document.getElementById('policeChance'),
-          startBtn= document.getElementById('startCasino'),
-          retBtn  = document.getElementById('retrieveCasino');
-
-    function updateCasinoUI(){
-      fairVal.innerText = fairness.value;
-      policeCh.innerText = (100 - fairness.value) + '%';
-      retBtn.disabled = !casinoRunning;
-      startBtn.disabled = casinoRunning;
+    function hireWorker() {
+      if (money < 10000) return log('Not enough money.');
+      money -= 10000;
+      workers++;
+      saveData();
+      updateUI();
     }
-    startBtn.onclick = ()=>{
-      if(money<50000) return log('Not enough for casino.');
-      money-=50000; updateMoney();
-      casinoRunning=true;
-      casinoProfits=0;
-      localStorage.setItem('casino_running','true');
-      localStorage.setItem('casino_profits','0');
-      updateCasinoUI();
-      log('Casino started.');
-    };
-    retBtn.onclick = ()=>{
-      // generate profits
-      const fair = parseInt(fairness.value),
-            max = (100-fair)*1000;
-      const profit = Math.floor(Math.random()*max);
-      casinoProfits += profit;
-      localStorage.setItem('casino_profits',casinoProfits);
-      // police chance
-      if(Math.random() < (100-fair)/100){
-        log('Police caught you! Jail 30s.');
-        retBtn.disabled=true;
-        setTimeout(()=>{
-          retBtn.disabled=false; log('Free from jail.');
-        },30000);
-      } else {
-        money += casinoProfits; updateMoney();
-        log(`Retrieved $${casinoProfits.toLocaleString()}.`);
-        casinoProfits=0; localStorage.setItem('casino_profits','0');
-      }
-    };
-    updateCasinoUI();
 
-    // --- Drug ---
-    const workerEl = document.getElementById('workerCount'),
-          hireBtn   = document.getElementById('hireWorker'),
-          produceBtn= document.getElementById('produceDrugs'),
-          invEl     = document.getElementById('drugInventory'),
-          typeSel   = document.getElementById('drugType'),
-          truckSel  = document.getElementById('truckType'),
-          deliverBtn= document.getElementById('deliverDrugs');
-
-    function updateDrugUI(){
-      workerEl.innerText = workers;
-      const t = typeSel.value;
-      invEl.innerText = inv[t];
-      produceBtn.disabled = (workers===0);
-      // truck options
-      [...truckSel.options].forEach(opt=>{
-        const k=opt.value;
-        if(k!=='none') opt.disabled = !hasTruck[k];
-      });
-      deliverBtn.disabled = inv[typeSel.value]===0 || truckSel.value==='none';
+    function buyIngredient() {
+      if (money < 1000) return log('Not enough money.');
+      money -= 1000;
+      ingredients++;
+      saveData();
+      updateUI();
     }
-    hireBtn.onclick = ()=>{
-      if(money<10000) return log('Not enough for worker.');
-      money-=10000; workers++;
-      localStorage.setItem('drug_workers',workers);
-      updateMoney(); updateDrugUI();
-    };
-    produceBtn.onclick = ()=>{
-      produceBtn.disabled=true;
-      setTimeout(()=>{
-        inv[typeSel.value] += workers;
-        localStorage.setItem(typeSel.value+'_inventory',inv[typeSel.value]);
-        updateDrugUI();
-        log(`Produced ${workers} ${typeSel.value}.`);
-        produceBtn.disabled=false;
-      },10000); // 10s per cycle
-    };
-    deliverBtn.onclick = ()=>{
-      deliverBtn.disabled=true;
-      const t = truckSel.value;
-      const times = {truckSmall:15000,truckMed:10000,truckLarge:5000}[t];
-      const chance = {truckSmall:0.3,truckMed:0.15,truckLarge:0.05}[t];
-      setTimeout(()=>{
-        if(Math.random()<chance){
-          log('Delivery busted!')
-          inv[typeSel.value]=0;
-        } else {
-          const gain = inv[typeSel.value]*100; // price per unit
-          money+=gain; updateMoney();
-          log(`Delivered ${inv[typeSel.value]} for $${gain}.`);
-          inv[typeSel.value]=0;
+
+    async function produceDrugs() {
+      if (workers <= 0 || ingredients <= 0) return log('Need workers and ingredients.');
+      document.getElementById('produceBtn').disabled = true;
+      await new Promise(resolve => setTimeout(resolve, 10000)); // wait 10s
+      const type = document.getElementById('drugType').value;
+      const amount = Math.min(workers, ingredients * 10);
+      const usedIngredients = Math.ceil(amount / 10);
+      ingredients -= usedIngredients;
+      inv[type] += amount;
+      saveData();
+      updateUI();
+      log(`Produced ${amount} units of ${type}.`);
+      document.getElementById('produceBtn').disabled = false;
+      if (autoProduce) produceDrugs(); // repeat if toggle on
+    }
+
+    document.getElementById('autoProduceToggle').addEventListener('change', (e) => {
+      autoProduce = e.target.checked;
+      if (autoProduce) produceDrugs();
+    });
+
+    function deliverDrugs() {
+      const truck = document.getElementById('truckSelect').value;
+      const type = document.getElementById('drugType').value;
+      const deliveryTimer = document.getElementById('deliveryTimer');
+      if (truck === 'none') return log('Select a truck.');
+
+      const owned = localStorage.getItem(truck) === 'true';
+      if (!owned) return log('You don’t own this truck!');
+
+      const caps = { truckSmall: 10, truckMed: 25, truckLarge: 50 };
+      const times = { truckSmall: 15000, truckMed: 10000, truckLarge: 5000 };
+
+      const cap = caps[truck];
+      const amt = Math.min(inv[type], cap);
+      if (amt <= 0) return log('No drugs to deliver.');
+
+      inv[type] -= amt;
+      saveData();
+      updateUI();
+
+      let secondsLeft = times[truck] / 1000;
+      const interval = setInterval(() => {
+        secondsLeft--;
+        deliveryTimer.innerText = `Delivering... ${secondsLeft}s`;
+        if (secondsLeft <= 0) {
+          clearInterval(interval);
+          deliveryTimer.innerText = '';
+          const profit = amt * 100;
+          money += profit;
+          saveData();
+          updateUI();
+          log(`Delivered ${amt} units of ${type} for $${profit}`);
         }
-        localStorage.setItem(typeSel.value+'_inventory',inv[typeSel.value]);
-        updateDrugUI();
-        deliverBtn.disabled=false;
-      },times);
-    };
-    updateDrugUI();
-
-    // --- Murder ---
-    const getOfferBtn = document.getElementById('getOffer'),
-          offerArea   = document.getElementById('offerArea'),
-          toolSel     = document.getElementById('murderTool'),
-          execBtn     = document.getElementById('executeHit');
-
-    function newOffer(){
-      const reward = Math.floor(5000 + Math.random()*20000);
-      currentOffer = reward;
-      offerArea.innerText = `Contract: eliminate target for $${reward}`;
-      toolSel.disabled = false;
-      execBtn.disabled = false;
+      }, 1000);
     }
-    getOfferBtn.onclick = ()=>{
-      if(getOfferBtn.disabled) return;
-      getOfferBtn.disabled=true;
-      newOffer();
-      setTimeout(()=>getOfferBtn.disabled=false,30000+Math.random()*20000);
-    };
-    execBtn.onclick = ()=>{
-      const tool = toolSel.value;
-      // require tool ownership from blackmarket
-      if(!localStorage.getItem(tool)) return log('You don’t own that tool.');
-      let chance = 0.6 + (tool==='driveby'?0.1:0);
-      if(Math.random()<chance){
-        money+=currentOffer; updateMoney();
-        log(`Success! Earned $${currentOffer}.`);
-      } else {
-        const loss = money*0.1;
-        money-=loss; updateMoney();
-        log(`Failed! Lost $${loss.toFixed(2)}.`);
-      }
-      currentOffer=null;
-      offerArea.innerText='';
-      toolSel.disabled=true;
-      execBtn.disabled=true;
-    };
 
-    // Init
-    updateMoney();
+    document.getElementById('drugType').addEventListener('change', updateUI);
+    updateUI();
   </script>
 </body>
 </html>
